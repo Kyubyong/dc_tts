@@ -2,7 +2,7 @@
 #/usr/bin/python2
 '''
 By kyubyong park. kbpark.linguist@gmail.com. 
-https://www.github.com/kyubyong/deepvoice3
+https://www.github.com/kyubyong/dc_tts
 '''
 from __future__ import print_function, division
 
@@ -70,8 +70,8 @@ def plot_alignment(alignments, gs, dir):
     im = ax.imshow(alignments)
     ax.axis('off')
 
-    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-    fig.colorbar(im, cax=cbar_ax)
+    # cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    fig.colorbar(im)
     plt.title('{} Steps'.format(gs))
     plt.savefig('{}/alignment_{}.png'.format(dir, gs), format='png')
 
@@ -84,26 +84,4 @@ def guided_attention(g=0.2):
 
     return W
 
-def binary_divergence(Y_hat, Y):
-    logit = tf.log(Y_hat + 1e-6) - tf.log(1 - Y_hat + 1e-6)
-    bd = -Y * logit + tf.log(1 + tf.exp(logit))
-    return bd
-
-
 guided_attention()
-# def cross_entropy_loss(predictions, labels, num_classes):
-#     def _softmax(X):
-#         exps = np.exp(X) - np.max(X)
-#         return exps / np.sum(exps, axis=-1, keepdims=True)
-#
-#     def _onehot(X, num_classes):
-#         n, t = X.shape
-#         ret = np.zeros([n, t, num_classes], np.int32)
-#         for i in range(n):
-#             for j in range(t):
-#                 ret[:, :, X[i, j]] = 1
-#         return ret
-#
-#     y = _onehot(labels, num_classes)
-#     p = np.clip(_softmax(predictions), 1e-7, 1 - 1e-7)
-#     return np.where(y == 1, -np.log(p), -np.log(1 - p))

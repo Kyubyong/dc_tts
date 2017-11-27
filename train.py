@@ -2,7 +2,7 @@
 # /usr/bin/python2
 '''
 By kyubyong park. kbpark.linguist@gmail.com. 
-https://www.github.com/kyubyong/deepvoice3
+https://www.github.com/kyubyong/dc_tts
 '''
 
 from __future__ import print_function
@@ -58,25 +58,36 @@ class Graph:
                                                                                  mononotic_attention=(not training),
                                                                           prev_max_attentions=self.prev_max_attentions)
                     with tf.variable_scope("AudioDec"):
-                        self.Y = AudioDec(self.R) # (B, T/r, n_mels)
+                        self.logits, self.Y = AudioDec(self.R, training=training) # (B, T/r, n_mels)
             else:  # num==2 & training
                 with tf.variable_scope("SSRN"):
-                    self.Z = SSRN(self.mels)
+                    self.logits, self.Z = SSRN(self.mels, training=training)
 
             if not training:
                 with tf.variable_scope("SSRN"):
-                    self.Z = SSRN(self.Y)
+                    self.logits, self.Z = SSRN(self.Y, training=training)
 
             self.global_step = tf.Variable(0, name='global_step', trainable=False)
             if training:
                 if num == 1:
                     # Loss
                     self.loss_mels = tf.reduce_mean(tf.abs(self.Y - self.mels))
+                    self.bd = tf.reduce_mean(tf.abs(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.logits, labels=self.mels)))
                     self.loss_att = tf.reduce_mean(tf.abs(self.A * guided_attention()))
-                    self.bd = tf.reduce_mean(binary_divergence(self.Y, self.mels))
-                    self.loss = self.loss_mels + self.loss_att + self.bd
+                    self.loss = 0.5*(self.loss_mels + self.bd) + 0.5*self.loss_att
+
+                    tf.summary.scalar('Train_Loss/mels', self.loss_mels)
+                    tf.summary.scalar('Train_Loss/bd', self.bd)
+                    tf.summary.scalar('Train_Loss/att', self.loss_att)
+                    tf.summary.scalar('Train_Loss/LOSS', self.loss)
                 else:
-                    self.loss = tf.reduce_mean(tf.abs(self.Z - self.mags))
+                    self.loss_mags = tf.reduce_mean(tf.abs(self.Z - self.mags))
+                    self.bd = tf.reduce_mean(tf.abs(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.logits, labels=self.mags)))
+                    self.loss = 0.5*(self.loss_mags + self.bd)
+
+                    tf.summary.scalar('Train_Loss/mags', self.loss_mags)
+                    tf.summary.scalar('Train_Loss/bd', self.bd)
+                    tf.summary.scalar('Train_Loss/LOSS', self.loss)
 
                 # # Loss
                 # self.loss_mels = tf.reduce_mean(tf.abs(self.Y - self.mels))
@@ -93,6 +104,7 @@ class Graph:
                 self.gvs = self.optimizer.compute_gradients(self.loss)
                 self.clipped = []
                 for grad, var in self.gvs:
+
                     grad = tf.clip_by_value(grad, -1. * hp.max_grad_val, hp.max_grad_val)
                     grad = tf.clip_by_norm(grad, hp.max_grad_norm)
                     self.clipped.append((grad, var))
@@ -102,9 +114,7 @@ class Graph:
 
                 # Summary
                 tf.summary.scalar('Train_Loss/LOSS', self.loss)
-                # tf.summary.scalar('Train_Loss/mels', self.loss_mels)
-                # tf.summary.scalar('Train_Loss/mags', self.loss_mags)
-                # tf.summary.scalar('Train_Loss/att', self.loss_att)
+
 
                 self.merged = tf.summary.merge_all()
 

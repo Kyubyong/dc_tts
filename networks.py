@@ -2,7 +2,7 @@
 #/usr/bin/python2
 '''
 By kyubyong park. kbpark.linguist@gmail.com. 
-https://www.github.com/kyubyong/deepvoice3
+https://www.github.com/kyubyong/dc_tts
 '''
 
 from __future__ import print_function
@@ -22,14 +22,15 @@ def TextEnc(L, training=True):
     '''
     i = 1
     tensor = embed(L,
-                  vocab_size=hp.vocab_size,
-                  num_units=hp.e,
+                   vocab_size=hp.vocab_size,
+                   num_units=hp.e,
                    scope="embed_{}".format(i)); i += 1
     tensor = conv1d(tensor,
                     filters=2*hp.d,
                     size=1,
                     rate=1,
                     norm_type="bn",
+                    dropout_rate=hp.dropout_rate,
                     activation_fn=tf.nn.relu,
                     training=training,
                     scope="C_{}".format(i)); i += 1
@@ -37,6 +38,7 @@ def TextEnc(L, training=True):
                     size=1,
                     rate=1,
                     norm_type="bn",
+                    dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
 
@@ -46,6 +48,7 @@ def TextEnc(L, training=True):
                             size=3,
                             rate=3**j,
                             norm_type="bn",
+                            dropout_rate=hp.dropout_rate,
                             activation_fn=highwaynet,
                             training=training,
                             scope="HC_{}".format(i)); i += 1
@@ -54,6 +57,7 @@ def TextEnc(L, training=True):
                         size=3,
                         rate=1,
                         norm_type="bn",
+                        dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
                         scope="HC_{}".format(i)); i += 1
@@ -63,6 +67,7 @@ def TextEnc(L, training=True):
                         size=1,
                         rate=1,
                         norm_type="bn",
+                        dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
                         scope="HC_{}".format(i)); i += 1
@@ -85,27 +90,27 @@ def AudioEnc(S, training=True):
                     rate=1,
                     padding="CAUSAL",
                     norm_type="ln",
+                    dropout_rate=hp.dropout_rate,
                     activation_fn=tf.nn.relu,
                     training=training,
                     scope="C_{}".format(i)); i += 1
-    a = tf.reduce_max(tensor)
     tensor = conv1d(tensor,
                     size=1,
                     rate=1,
                     padding="CAUSAL",
                     norm_type="ln",
+                    dropout_rate=hp.dropout_rate,
                     activation_fn=tf.nn.relu,
                     training=training,
                     scope="C_{}".format(i)); i += 1
-    b = tf.reduce_max(tensor)
     tensor = conv1d(tensor,
                     size=1,
                     rate=1,
                     padding="CAUSAL",
                     norm_type="ln",
+                    dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
-    c = tf.reduce_max(tensor)
     for _ in range(2):
         for j in range(4):
             tensor = conv1d(tensor,
@@ -113,16 +118,17 @@ def AudioEnc(S, training=True):
                             rate=3**j,
                             padding="CAUSAL",
                             norm_type="ln",
+                            dropout_rate=hp.dropout_rate,
                             activation_fn=highwaynet,
                             training=training,
                             scope="HC_{}".format(i)); i += 1
-    d = tf.reduce_max(tensor)
     for _ in range(2):
         tensor = conv1d(tensor,
                         size=3,
                         rate=3,
                         padding="CAUSAL",
                         norm_type="ln",
+                        dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
                         scope="HC_{}".format(i)); i += 1
@@ -163,6 +169,7 @@ def AudioDec(R, training=True):
     Returns:
       Y: Melspectrogram predictions. (B, T/r, n_mels)
     '''
+
     i = 1
     tensor = conv1d(R,
                     filters=hp.d,
@@ -170,9 +177,9 @@ def AudioDec(R, training=True):
                     rate=1,
                     padding="CAUSAL",
                     norm_type="ln",
+                    dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
-
     for _ in range(2):
         for j in range(4):
             tensor = conv1d(tensor,
@@ -180,6 +187,7 @@ def AudioDec(R, training=True):
                             rate=3**j,
                             padding="CAUSAL",
                             norm_type="ln",
+                            dropout_rate=hp.dropout_rate,
                             activation_fn=highwaynet,
                             training=training,
                             scope="HC_{}".format(i)); i += 1
@@ -189,6 +197,7 @@ def AudioDec(R, training=True):
                         rate=1,
                         padding="CAUSAL",
                         norm_type="ln",
+                        dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
                         scope="HC_{}".format(i)); i += 1
@@ -198,19 +207,21 @@ def AudioDec(R, training=True):
                         rate=1,
                         padding="CAUSAL",
                         norm_type="ln",
+                        dropout_rate=hp.dropout_rate,
                         activation_fn=tf.nn.relu,
                         training=training,
                         scope="C_{}".format(i)); i += 1
-    tensor = conv1d(tensor,
+    logits = conv1d(tensor,
                     filters=hp.n_mels,
                     size=1,
                     rate=1,
                     padding="CAUSAL",
                     norm_type="ln",
-                    activation_fn=tf.nn.sigmoid,
+                    dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
-    return tensor
+    Y = tf.nn.sigmoid(logits)
+    return logits, Y
 
 def SSRN(Y, training=True):
     '''
@@ -224,32 +235,35 @@ def SSRN(Y, training=True):
 
     # -> (B, T/r, c)
     tensor = conv1d(Y,
-                   filters=hp.c,
-                   size=1,
-                   rate=1,
+                    filters=hp.c,
+                    size=1,
+                    rate=1,
                     norm_type="bn",
+                    dropout_rate=hp.dropout_rate,
                     training=training,
-                   scope="C_{}".format(i)); i += 1
-
+                    scope="C_{}".format(i)); i += 1
     for j in range(2):
         tensor = conv1d(tensor,
                       size=3,
                       rate=3**j,
-                        norm_type="bn",
+                      norm_type="bn",
+                      dropout_rate=hp.dropout_rate,
                       activation_fn=highwaynet,
-                        training=training,
+                      training=training,
                       scope="HC_{}".format(i)); i += 1
     for _ in range(2):
         # -> (B, T/2, c) -> (B, T, c)
         tensor = conv1d_transpose(tensor,
-                                scope="D_{}".format(i),
+                                  scope="D_{}".format(i),
                                   norm_type="bn",
+                                  dropout_rate=hp.dropout_rate,
                                   training=training,); i += 1
         for j in range(2):
             tensor = conv1d(tensor,
                             size=3,
                             rate=3**j,
                             norm_type="bn",
+                            dropout_rate=hp.dropout_rate,
                             activation_fn=highwaynet,
                             training=training,
                             scope="HC_{}".format(i)); i += 1
@@ -259,6 +273,7 @@ def SSRN(Y, training=True):
                     size=1,
                     rate=1,
                     norm_type="bn",
+                    dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
     for _ in range(2):
@@ -266,6 +281,7 @@ def SSRN(Y, training=True):
                         size=3,
                         rate=1,
                         norm_type="bn",
+                        dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
                         scope="HC_{}".format(i)); i += 1
@@ -275,6 +291,7 @@ def SSRN(Y, training=True):
                     size=1,
                     rate=1,
                     norm_type="bn",
+                    dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
 
@@ -283,14 +300,16 @@ def SSRN(Y, training=True):
                         size=1,
                         rate=1,
                         norm_type="bn",
+                        dropout_rate=hp.dropout_rate,
                         activation_fn=tf.nn.relu,
                         training=training,
                         scope="C_{}".format(i)); i += 1
-    tensor = conv1d(tensor,
-                    size=1,
-                    rate=1,
-                    norm_type="bn",
-                    activation_fn=tf.nn.sigmoid,
-                    training=training,
-                    scope="C_{}".format(i))
-    return tensor
+    logits = conv1d(tensor,
+               size=1,
+               rate=1,
+               norm_type="bn",
+               dropout_rate=hp.dropout_rate,
+               training=training,
+               scope="C_{}".format(i))
+    Z = tf.nn.sigmoid(logits)
+    return logits, Z

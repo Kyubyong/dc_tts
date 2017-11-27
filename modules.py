@@ -2,7 +2,7 @@
 #/usr/bin/python2
 '''
 By kyubyong park. kbpark.linguist@gmail.com. 
-https://www.github.com/kyubyong/deepvoice3
+https://www.github.com/kyubyong/dc_tts
 '''
 
 from __future__ import print_function, division
@@ -49,7 +49,6 @@ def normalize(inputs,
               decay=.9,
               epsilon=1e-8,
               training=True,
-              activation_fn=None,
               reuse=None,
               scope="normalize"):
     '''Applies {batch|layer} normalization.
@@ -110,7 +109,7 @@ def normalize(inputs,
                                                    center=True,
                                                    scale=True,
                                                    updates_collections=None,
-                                                   is_training=is_training,
+                                                   is_training=training,
                                                    scope=scope,
                                                    reuse=reuse,
                                                    fused=False)
@@ -127,9 +126,6 @@ def normalize(inputs,
             outputs = gamma * normalized + beta
     else:
         outputs = inputs
-
-    if activation_fn:
-        outputs = activation_fn(outputs)
 
     return outputs
 
@@ -164,6 +160,7 @@ def conv1d(inputs,
            size=1,
            rate=1,
            padding="SAME",
+           dropout_rate=0,
            use_bias=True,
            norm_type=None,
            activation_fn=None,
@@ -200,22 +197,25 @@ def conv1d(inputs,
                   "kernel_initializer": tf.contrib.layers.variance_scaling_initializer(), "reuse": reuse}
 
         tensor = tf.layers.conv1d(**params)
-        tensor = normalize(tensor, type=norm_type, training=training)
         if activation_fn is not None:
             tensor = activation_fn(tensor)
+        tensor = normalize(tensor, type=norm_type, training=training)
+        tensor = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
+
     return tensor
 
 def conv1d_transpose(inputs,
-                    filters=None,
-                    size=3,
-                    stride=2,
-                    padding='same',
-                    norm_type=None,
-                    activation=None,
+                     filters=None,
+                     size=3,
+                     stride=2,
+                     padding='same',
+                     dropout_rate=0,
+                     norm_type=None,
+                     activation=None,
                      training=True,
-                    use_bias=True,
-                    scope="conv1d_transpose",
-                    reuse=None):
+                     use_bias=True,
+                     scope="conv1d_transpose",
+                     reuse=None):
 
     with tf.variable_scope(scope, reuse=reuse):
         if filters is None:
@@ -229,10 +229,10 @@ def conv1d_transpose(inputs,
                                    activation=None,
                                    use_bias=use_bias)
         tensor = tf.squeeze(tensor, 1)
-        tensor = normalize(tensor, type=norm_type, training=training)
-
         if activation is not None:
             tensor = activation(tensor)
+        tensor = normalize(tensor, type=norm_type, training=training)
+        tensor = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
 
     return tensor
 

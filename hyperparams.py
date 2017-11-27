@@ -2,7 +2,7 @@
 #/usr/bin/python2
 '''
 By kyubyong park. kbpark.linguist@gmail.com. 
-https://www.github.com/kyubyong/deepvoice3
+https://www.github.com/kyubyong/dc_tts
 '''
 import math
 
@@ -33,27 +33,12 @@ class Hyperparams:
 
     # Model
     r = 4 # Reduction factor. Do not change this.
-    dropout_rate = .05
-
-    ## Enocder
+    dropout_rate = .2
     vocab_size = 32 # [PE a-z'.?]
     e = 128 # == embedding
     d = 256
     c = 512 # == hidden units of SSRN
-    ## Decoder
-    dec_layers = 4
-    dec_filter_size = 5
-    attention_size = 128*2 # == a
-    ## Converter
-    converter_layers = 5*2
-    converter_filter_size = 5
-    converter_channels = 256 # == v
-
-    sinusoid = False
     attention_win_size = 3
-
-    max_grad_val = 5
-    max_grad_norm = 100
 
     # data
     data = 'LJSpeech-1.0'#'nick'### # or 'nick (internal)'
@@ -62,9 +47,11 @@ class Hyperparams:
     T = int(get_T(max_duration, sr, hop_length, r)) # Maximum number of frames
 
     # training scheme
-    lr, beta1, beta2, eps = 0.0005, 0.5, 0.9, 10e-6
-    logdir = "logdir/L03"
-    sampledir = 'samples/L03'
+    lr, beta1, beta2, eps = 0.001, 0.5, 0.9, 10e-6
+    logdir = "logdir/L10"
+    sampledir = 'samples/L10'
     B = 16 # batch size
+    max_grad_val = 5
+    max_grad_norm = 100
     num_iterations = 1000000
 
