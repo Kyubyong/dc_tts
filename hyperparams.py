@@ -33,7 +33,7 @@ class Hyperparams:
 
     # Model
     r = 4 # Reduction factor. Do not change this.
-    dropout_rate = .2
+    dropout_rate = 0
     vocab_size = 32 # [PE a-z'.?]
     e = 128 # == embedding
     d = 256
@@ -48,8 +48,8 @@ class Hyperparams:
 
     # training scheme
     lr, beta1, beta2, eps = 0.001, 0.5, 0.9, 10e-6
-    logdir = "logdir/L10"
-    sampledir = 'samples/L10'
+    logdir = "logdir/L11"
+    sampledir = 'samples/L11'
     B = 16 # batch size
     max_grad_val = 5
     max_grad_norm = 100

@@ -12,7 +12,7 @@ import tensorflow as tf
 import numpy as np
 
 
-def embed(inputs, vocab_size, num_units, zero_pad=True, scope="embedding", reuse=None):
+def embed(inputs, vocab_size, num_units, zero_pad=False, scope="embedding", reuse=None):
     '''Embeds a given tensor. 
     
     Args:

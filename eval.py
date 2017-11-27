@@ -76,6 +76,7 @@ def eval():
 
             # Generate the first wav file
             sent = "".join(g.idx2char[xx] for xx in L[-1]).split("E")[0]
+            print(sent)
             wav = spectrogram2wav(Z[-1])
             wav = np.expand_dims(wav, 0)
 

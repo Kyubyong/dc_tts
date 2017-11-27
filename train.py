@@ -89,12 +89,6 @@ class Graph:
                     tf.summary.scalar('Train_Loss/bd', self.bd)
                     tf.summary.scalar('Train_Loss/LOSS', self.loss)
 
-                # # Loss
-                # self.loss_mels = tf.reduce_mean(tf.abs(self.Y - self.mels))
-                # # self.loss_mags = tf.reduce_mean(tf.abs(self.Z - self.mags))
-                # self.loss_att = tf.reduce_mean(tf.abs(self.A * guided_attention()))
-                # self.loss = self.loss_mels + self.loss_att
-
                 # Training Scheme
                 self.optimizer = tf.train.AdamOptimizer(learning_rate=hp.lr,
                                                         beta1=hp.beta1,
@@ -109,12 +103,6 @@ class Graph:
                     grad = tf.clip_by_norm(grad, hp.max_grad_norm)
                     self.clipped.append((grad, var))
                 self.train_op = self.optimizer.apply_gradients(self.clipped, global_step=self.global_step)
-
-                # self.train_op = self.optimizer.minimize(self.loss, global_step=self.global_step)
-
-                # Summary
-                tf.summary.scalar('Train_Loss/LOSS', self.loss)
-
 
                 self.merged = tf.summary.merge_all()
 
