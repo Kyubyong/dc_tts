@@ -46,9 +46,9 @@ def embed(inputs, vocab_size, num_units, zero_pad=False, scope="embedding", reus
 
 def normalize(inputs,
               type="bn",
-              decay=.9,
               epsilon=1e-8,
               training=True,
+              masking=False,
               reuse=None,
               scope="normalize"):
     '''Applies {batch|layer} normalization.
@@ -57,18 +57,9 @@ def normalize(inputs,
       inputs: A tensor with 2 or more dimensions, where the first dimension has
         `batch_size`. If type is `bn`, the normalization is over all but
         the last dimension. Or if type is `ln`, the normalization is over
-        the last dimension. Note that this is different from the native
-        `tf.contrib.layers.batch_norm`. For this I recommend you change
-        a line in ``tensorflow/contrib/layers/python/layers/layer.py`
-        as follows.
-        Before: mean, variance = nn.moments(inputs, axis, keep_dims=True)
-        After: mean, variance = nn.moments(inputs, [-1], keep_dims=True)
+        the last dimension.
       type: A string. Either "bn" or "ln".
-      decay: Decay for the moving average. Reasonable values for `decay` are close
-        to 1.0, typically in the multiple-nines range: 0.999, 0.99, 0.9, etc.
-        Lower `decay` value (recommend trying `decay`=0.9) if model experiences
-        reasonably good training performance but poor validation and/or test
-        performance.
+      decay: Decay for the moving average.
       is_training: Whether or not the layer is in training mode. W
       activation_fn: Activation function.
       scope: Optional scope for `variable_scope`.
@@ -89,13 +80,8 @@ def normalize(inputs,
             elif inputs_rank == 3:
                 inputs = tf.expand_dims(inputs, axis=1)
 
-            outputs = tf.contrib.layers.batch_norm(inputs=inputs,
-                                                   decay=decay,
-                                                   center=True,
-                                                   scale=True,
-                                                   updates_collections=None,
-                                                   is_training=training,
-                                                   scope=scope,
+            outputs = tf.layers.batch_normalization(inputs=inputs,
+                                                   training=training,
                                                    fused=True,
                                                    reuse=reuse)
             # restore original shape
@@ -104,13 +90,8 @@ def normalize(inputs,
             elif inputs_rank == 3:
                 outputs = tf.squeeze(outputs, axis=1)
         else:  # fallback to naive batch norm
-            outputs = tf.contrib.layers.batch_norm(inputs=inputs,
-                                                   decay=decay,
-                                                   center=True,
-                                                   scale=True,
-                                                   updates_collections=None,
-                                                   is_training=training,
-                                                   scope=scope,
+            outputs = tf.layers.batch_normalization(inputs=inputs,
+                                                   training=training,
                                                    reuse=reuse,
                                                    fused=False)
     elif type in ("ln", "ins"):
@@ -122,7 +103,10 @@ def normalize(inputs,
             mean, variance = tf.nn.moments(inputs, [reduction_axis], keep_dims=True)
             beta = tf.Variable(tf.zeros(params_shape))
             gamma = tf.Variable(tf.ones(params_shape))
-            normalized = (inputs - mean) / ((variance + epsilon) ** (.5))
+            normalized = (inputs - mean) * tf.rsqrt(variance + epsilon)
+            if masking:
+                masks = tf.sign(tf.abs(tf.reduce_sum(inputs, -1, keep_dims=True)))
+                normalized *= masks
             outputs = gamma * normalized + beta
     else:
         outputs = inputs
@@ -197,9 +181,10 @@ def conv1d(inputs,
                   "kernel_initializer": tf.contrib.layers.variance_scaling_initializer(), "reuse": reuse}
 
         tensor = tf.layers.conv1d(**params)
+        tensor = normalize(tensor, type=norm_type, training=training)
         if activation_fn is not None:
             tensor = activation_fn(tensor)
-        tensor = normalize(tensor, type=norm_type, training=training)
+
         tensor = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
 
     return tensor
@@ -229,9 +214,10 @@ def conv1d_transpose(inputs,
                                    activation=None,
                                    use_bias=use_bias)
         tensor = tf.squeeze(tensor, 1)
+        tensor = normalize(tensor, type=norm_type, training=training)
         if activation is not None:
             tensor = activation(tensor)
-        tensor = normalize(tensor, type=norm_type, training=training)
+
         tensor = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
 
     return tensor

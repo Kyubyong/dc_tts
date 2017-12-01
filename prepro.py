@@ -38,7 +38,7 @@ def get_spectrograms(sound_file):
                           n_fft=hp.n_fft,
                           hop_length=hp.hop_length,
                           win_length=hp.win_length)
-
+    if len(linear)!=513: print(linear.shape)
     # magnitude spectrogram
     mag = np.abs(linear)  # (1+n_fft//2, T)
 

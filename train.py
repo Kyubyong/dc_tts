@@ -52,6 +52,7 @@ class Graph:
 
                     with tf.variable_scope("Attention"):
                         # R: (B, T/r, 2d)
+                        # A: (B, T/r, N)
                         # alignments: (N, T/r)
                         # max_attentions: (B, T/r)
                         self.R, self.A, self.alignments, self.max_attentions = Attention(self.Q, self.K, self.V,
@@ -74,7 +75,7 @@ class Graph:
                     self.loss_mels = tf.reduce_mean(tf.abs(self.Y - self.mels))
                     self.bd = tf.reduce_mean(tf.abs(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.logits, labels=self.mels)))
                     self.loss_att = tf.reduce_mean(tf.abs(self.A * guided_attention()))
-                    self.loss = 0.5*(self.loss_mels + self.bd) + 0.5*self.loss_att
+                    self.loss = 0.25*(self.loss_mels + self.bd) + 0.5*self.loss_att
 
                     tf.summary.scalar('Train_Loss/mels', self.loss_mels)
                     tf.summary.scalar('Train_Loss/bd', self.bd)
@@ -90,7 +91,8 @@ class Graph:
                     tf.summary.scalar('Train_Loss/LOSS', self.loss)
 
                 # Training Scheme
-                self.optimizer = tf.train.AdamOptimizer(learning_rate=hp.lr,
+                self.lr = learning_rate_decay(hp.lr, self.global_step)
+                self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr,
                                                         beta1=hp.beta1,
                                                         beta2=hp.beta2,
                                                         epsilon=hp.eps)
@@ -98,7 +100,6 @@ class Graph:
                 self.gvs = self.optimizer.compute_gradients(self.loss)
                 self.clipped = []
                 for grad, var in self.gvs:
-
                     grad = tf.clip_by_value(grad, -1. * hp.max_grad_val, hp.max_grad_val)
                     grad = tf.clip_by_norm(grad, hp.max_grad_norm)
                     self.clipped.append((grad, var))

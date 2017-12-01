@@ -29,7 +29,7 @@ def TextEnc(L, training=True):
                     filters=2*hp.d,
                     size=1,
                     rate=1,
-                    norm_type="bn",
+                    norm_type="ln",
                     dropout_rate=hp.dropout_rate,
                     activation_fn=tf.nn.relu,
                     training=training,
@@ -37,7 +37,7 @@ def TextEnc(L, training=True):
     tensor = conv1d(tensor,
                     size=1,
                     rate=1,
-                    norm_type="bn",
+                    norm_type="ln",
                     dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
@@ -47,7 +47,7 @@ def TextEnc(L, training=True):
             tensor = conv1d(tensor,
                             size=3,
                             rate=3**j,
-                            norm_type="bn",
+                            norm_type="ln",
                             dropout_rate=hp.dropout_rate,
                             activation_fn=highwaynet,
                             training=training,
@@ -56,7 +56,7 @@ def TextEnc(L, training=True):
         tensor = conv1d(tensor,
                         size=3,
                         rate=1,
-                        norm_type="bn",
+                        norm_type="ln",
                         dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
@@ -66,7 +66,7 @@ def TextEnc(L, training=True):
         tensor = conv1d(tensor,
                         size=1,
                         rate=1,
-                        norm_type="bn",
+                        norm_type="ln",
                         dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
@@ -143,6 +143,7 @@ def Attention(Q, K, V, mononotic_attention=False, prev_max_attentions=None):
 
     Returns:
       R: [Context Vectors; Q]. (B, T/r, 2d)
+      A: [Attention]. (B, T/r, N)
     '''
     A = tf.matmul(Q, K, transpose_b=True) / tf.sqrt(tf.to_float(hp.d))
     if mononotic_attention:  # for inference
@@ -238,7 +239,7 @@ def SSRN(Y, training=True):
                     filters=hp.c,
                     size=1,
                     rate=1,
-                    norm_type="bn",
+                    norm_type="ln",
                     dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
@@ -246,7 +247,7 @@ def SSRN(Y, training=True):
         tensor = conv1d(tensor,
                       size=3,
                       rate=3**j,
-                      norm_type="bn",
+                      norm_type="ln",
                       dropout_rate=hp.dropout_rate,
                       activation_fn=highwaynet,
                       training=training,
@@ -255,14 +256,14 @@ def SSRN(Y, training=True):
         # -> (B, T/2, c) -> (B, T, c)
         tensor = conv1d_transpose(tensor,
                                   scope="D_{}".format(i),
-                                  norm_type="bn",
+                                  norm_type="ln",
                                   dropout_rate=hp.dropout_rate,
                                   training=training,); i += 1
         for j in range(2):
             tensor = conv1d(tensor,
                             size=3,
                             rate=3**j,
-                            norm_type="bn",
+                            norm_type="ln",
                             dropout_rate=hp.dropout_rate,
                             activation_fn=highwaynet,
                             training=training,
@@ -272,7 +273,7 @@ def SSRN(Y, training=True):
                     filters=2*hp.c,
                     size=1,
                     rate=1,
-                    norm_type="bn",
+                    norm_type="ln",
                     dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
@@ -280,7 +281,7 @@ def SSRN(Y, training=True):
         tensor = conv1d(tensor,
                         size=3,
                         rate=1,
-                        norm_type="bn",
+                        norm_type="ln",
                         dropout_rate=hp.dropout_rate,
                         activation_fn=highwaynet,
                         training=training,
@@ -290,7 +291,7 @@ def SSRN(Y, training=True):
                     filters=1+hp.n_fft//2,
                     size=1,
                     rate=1,
-                    norm_type="bn",
+                    norm_type="ln",
                     dropout_rate=hp.dropout_rate,
                     training=training,
                     scope="C_{}".format(i)); i += 1
@@ -299,7 +300,7 @@ def SSRN(Y, training=True):
         tensor = conv1d(tensor,
                         size=1,
                         rate=1,
-                        norm_type="bn",
+                        norm_type="ln",
                         dropout_rate=hp.dropout_rate,
                         activation_fn=tf.nn.relu,
                         training=training,
@@ -307,7 +308,7 @@ def SSRN(Y, training=True):
     logits = conv1d(tensor,
                size=1,
                rate=1,
-               norm_type="bn",
+               norm_type="ln",
                dropout_rate=hp.dropout_rate,
                training=training,
                scope="C_{}".format(i))

@@ -20,8 +20,6 @@ class Hyperparams:
     # signal processing
     sr = 22050 # Sampling rate.
     n_fft = 1024 # fft points (samples)
-    frame_shift = 0.0125 # seconds
-    frame_length = 0.05 # seconds
     hop_length = 256 # samples  This is dependent on the frame_shift.
     win_length = 1024 # samples This is dependent on the frame_length.
     n_mels = 80 # Number of Mel banks to generate
@@ -47,9 +45,9 @@ class Hyperparams:
     T = int(get_T(max_duration, sr, hop_length, r)) # Maximum number of frames
 
     # training scheme
-    lr, beta1, beta2, eps = 0.001, 0.5, 0.9, 10e-6
-    logdir = "logdir/L11"
-    sampledir = 'samples/L11'
+    lr, beta1, beta2, eps = 0.001, 0.9, 0.99, 10e-6
+    logdir = "logdir/L06"
+    sampledir = 'samples/L06'
     B = 16 # batch size
     max_grad_val = 5
     max_grad_norm = 100

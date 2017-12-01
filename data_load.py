@@ -17,22 +17,49 @@ import os
 import unicodedata
 from num2words import num2words
 
+# def text_normalize(sent):
+#     '''Minimum text preprocessing'''
+#     def _strip_accents(s):
+#         return ''.join(c for c in unicodedata.normalize('NFD', s)
+#                        if unicodedata.category(c) != 'Mn')
+#
+#     normalized = []
+#     for word in sent.split():
+#         word = _strip_accents(word.lower())
+#         srch = re.match("\d[\d,.]*$", word)
+#         if srch:
+#             word = num2words(float(word.replace(",", "")))
+#         word = re.sub(u"[-—-]", " ", word)
+#         word = re.sub("[^ a-z'.?]", "", word)
+#         normalized.append(word)
+#     normalized = " ".join(normalized)
+#     normalized = re.sub("[ ]{2,}", " ", normalized)
+#     normalized = normalized.strip()
+#
+#     return normalized
+
 def text_normalize(sent):
     '''Minimum text preprocessing'''
     def _strip_accents(s):
         return ''.join(c for c in unicodedata.normalize('NFD', s)
                        if unicodedata.category(c) != 'Mn')
 
+    # sentence level
+    sent = _strip_accents(sent.lower())
+    sent = re.sub(u"[-—-]", " ", sent)
+    sent = re.sub("[^ a-z.?\d]", "", sent)
+
+    # word level
     normalized = []
     for word in sent.split():
-        word = _strip_accents(word.lower())
         srch = re.match("\d[\d,.]*$", word)
         if srch:
             word = num2words(float(word.replace(",", "")))
-        word = re.sub(u"[-—-]", " ", word)
-        word = re.sub("[^ a-z'.?]", "", word)
+        abb2exp = {'mr.':'mister', 'mrs': "misess", "dr.":"doctor", "no.": "number", "st.": "saint", "rev.": "reverend", "etc.":"et cetera"}
+        word = abb2exp.get(word, word)
         normalized.append(word)
     normalized = " ".join(normalized)
+    normalized = normalized.replace(".", " ")
     normalized = re.sub("[ ]{2,}", " ", normalized)
     normalized = normalized.strip()
 
