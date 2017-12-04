@@ -18,14 +18,15 @@ from data_load import load_data
 
 def eval():
     # Load data
-    texts, mels, mags = load_data(training=False)
+    lengths, texts, mels, mags = load_data(training=False)
+    seqlen = max(lengths)
 
     L = np.array([np.fromstring(text, np.int32) for text in texts])
     mels = np.array([np.load(mel) for mel in mels])
     mags = np.array([np.load(mag) for mag in mags])
 
     # Padding
-    L = np.array([np.pad(each, ((0, hp.N),), "constant")[:hp.N] for each in L])
+    L = np.array([np.pad(each, ((0, seqlen),), "constant")[:seqlen] for each in L])
     mels = np.array([np.pad(each, ((0, hp.T), (0, 0)), "constant")[:hp.T] for each in mels])
     mags = np.array([np.pad(each, ((0, hp.T), (0, 0)), "constant")[:hp.T] for each in mags])
 
@@ -76,7 +77,6 @@ def eval():
 
             # Generate the first wav file
             sent = "".join(g.idx2char[xx] for xx in L[-1]).split("E")[0]
-            print(sent)
             wav = spectrogram2wav(Z[-1])
             wav = np.expand_dims(wav, 0)
 
@@ -86,10 +86,6 @@ def eval():
             tf.summary.scalar("Eval_Loss/LOSS", eval_loss)
             tf.summary.text("Sent", tf.convert_to_tensor(sent))
             tf.summary.audio("audio sample", wav, hp.sr, max_outputs=1)
-            # tf.summary.histogram("mag/output", mag_output)
-            # tf.summary.histogram("mel/output", mel_output)
-            # tf.summary.histogram("mag/target", z)
-            # tf.summary.histogram("mel/target", y1)
             tf.summary.image("alignments", np.expand_dims(np.expand_dims(alignments, 0), -1), max_outputs=len(alignments))
 
             merged = tf.summary.merge_all()

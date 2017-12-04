@@ -27,9 +27,9 @@ class Graph:
         self.graph = tf.Graph()
         with self.graph.as_default():
             # Data Feeding
-            ## x: Text. (B, N), int32
+            ## L: Text. (B, N), int32
             ## mels: Reduced melspectrogram. (B, T/r, n_mels) float32
-            ## mag: Magnitude. (B, T, n_fft//2+1) float32
+            ## mags: Magnitude. (B, T, n_fft//2+1) float32
             if training:
                 self.L, self.mels, self.mags, self.num_batch = get_batch()
                 self.prev_max_attentions = tf.ones(shape=(hp.B,), dtype=tf.int32)
@@ -57,7 +57,7 @@ class Graph:
                         # max_attentions: (B, T/r)
                         self.R, self.A, self.alignments, self.max_attentions = Attention(self.Q, self.K, self.V,
                                                                                  mononotic_attention=(not training),
-                                                                          prev_max_attentions=self.prev_max_attentions)
+                                                                                 prev_max_attentions=self.prev_max_attentions)
                     with tf.variable_scope("AudioDec"):
                         self.logits, self.Y = AudioDec(self.R, training=training) # (B, T/r, n_mels)
             else:  # num==2 & training
@@ -74,7 +74,8 @@ class Graph:
                     # Loss
                     self.loss_mels = tf.reduce_mean(tf.abs(self.Y - self.mels))
                     self.bd = tf.reduce_mean(tf.abs(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.logits, labels=self.mels)))
-                    self.loss_att = tf.reduce_mean(tf.abs(self.A * guided_attention()))
+                    self.A = tf.pad(self.A, [(0, 0), (0, hp.T//hp.r), (0, hp.N)])[:, :hp.T//hp.r, :hp.N]
+                    self.loss_att = tf.reduce_sum(tf.abs(self.A * guided_attention()))/tf.reduce_sum(tf.sign(tf.abs(self.A)))
                     self.loss = 0.25*(self.loss_mels + self.bd) + 0.5*self.loss_att
 
                     tf.summary.scalar('Train_Loss/mels', self.loss_mels)
@@ -82,7 +83,11 @@ class Graph:
                     tf.summary.scalar('Train_Loss/att', self.loss_att)
                     tf.summary.scalar('Train_Loss/LOSS', self.loss)
                 else:
-                    self.loss_mags = tf.reduce_mean(tf.abs(self.Z - self.mags))
+                    self.logits = tf.pad(self.logits, [(0, 0), (0, hp.T), (0, 0)])[:, :hp.T, :]
+                    self.Z = tf.pad(self.Z, [(0, 0), (0, hp.T), (0, 0)])[:, :hp.T, :]
+                    self.mags = tf.pad(self.mags, [(0, 0), (0, hp.T), (0, 0)])[:, :hp.T, :]
+
+                    self.loss_mags = tf.reduce_sum(tf.abs(self.Z - self.mags))/tf.reduce_sum(tf.sign(tf.abs(self.mags)))
                     self.bd = tf.reduce_mean(tf.abs(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.logits, labels=self.mags)))
                     self.loss = 0.5*(self.loss_mags + self.bd)
 
@@ -122,7 +127,6 @@ if __name__ == '__main__':
                 plot_alignment(alignments, 0, logdir)  # (Tx, Ty/r)
 
             while 1:
-                if sv.should_stop(): break
                 for _ in tqdm(range(g.num_batch), total=g.num_batch, ncols=70, leave=False, unit='b'):
                     gs, _ = sess.run([g.global_step, g.train_op])
 

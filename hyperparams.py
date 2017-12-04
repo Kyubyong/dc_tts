@@ -43,13 +43,11 @@ class Hyperparams:
     max_duration = 10.0 # Maximum length of a sound file in seconds.
     N = 180 # Maximum number of characters.
     T = int(get_T(max_duration, sr, hop_length, r)) # Maximum number of frames
-
     # training scheme
-    lr, beta1, beta2, eps = 0.001, 0.9, 0.99, 10e-6
-    logdir = "logdir/L06"
-    sampledir = 'samples/L06'
+    lr, beta1, beta2, eps = 0.001, 0.5, 0.99, 10e-6
+    logdir = "logdir/L03"
+    sampledir = 'samples/L03'
     B = 16 # batch size
     max_grad_val = 5
     max_grad_norm = 100
     num_iterations = 1000000
-

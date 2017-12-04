@@ -48,7 +48,6 @@ def normalize(inputs,
               type="bn",
               epsilon=1e-8,
               training=True,
-              masking=False,
               reuse=None,
               scope="normalize"):
     '''Applies {batch|layer} normalization.
@@ -68,32 +67,9 @@ def normalize(inputs,
       A tensor with the same shape and data dtype as `inputs`.
     '''
     if type == "bn":
-        inputs_shape = inputs.get_shape()
-        inputs_rank = inputs_shape.ndims
-
-        # use fused batch norm if inputs_rank in [2, 3, 4] as it is much faster.
-        # pay attention to the fact that fused_batch_norm requires shape to be rank 4 of NHWC.
-        if inputs_rank in [2, 3, 4]:
-            if inputs_rank == 2:
-                inputs = tf.expand_dims(inputs, axis=1)
-                inputs = tf.expand_dims(inputs, axis=2)
-            elif inputs_rank == 3:
-                inputs = tf.expand_dims(inputs, axis=1)
-
-            outputs = tf.layers.batch_normalization(inputs=inputs,
-                                                   training=training,
-                                                   fused=True,
-                                                   reuse=reuse)
-            # restore original shape
-            if inputs_rank == 2:
-                outputs = tf.squeeze(outputs, axis=[1, 2])
-            elif inputs_rank == 3:
-                outputs = tf.squeeze(outputs, axis=1)
-        else:  # fallback to naive batch norm
-            outputs = tf.layers.batch_normalization(inputs=inputs,
-                                                   training=training,
-                                                   reuse=reuse,
-                                                   fused=False)
+        outputs = tf.layers.batch_normalization(inputs=inputs,
+                                               training=training,
+                                               reuse=reuse)
     elif type in ("ln", "ins"):
         reduction_axis = -1 if type == "ln" else 1
         with tf.variable_scope(scope, reuse=reuse):
@@ -104,9 +80,6 @@ def normalize(inputs,
             beta = tf.Variable(tf.zeros(params_shape))
             gamma = tf.Variable(tf.ones(params_shape))
             normalized = (inputs - mean) * tf.rsqrt(variance + epsilon)
-            if masking:
-                masks = tf.sign(tf.abs(tf.reduce_sum(inputs, -1, keep_dims=True)))
-                normalized *= masks
             outputs = gamma * normalized + beta
     else:
         outputs = inputs
@@ -135,8 +108,7 @@ def highwaynet(inputs, num_units=None, scope="highwaynet", reuse=None):
         H = tf.layers.dense(inputs, units=num_units, activation=tf.nn.relu, name="dense1")
         T = tf.layers.dense(inputs, units=num_units, activation=tf.nn.sigmoid,
                             bias_initializer=tf.constant_initializer(-1.0), name="dense2")
-        C = 1. - T
-        outputs = H * T + inputs * C
+        outputs = H * T + inputs * (1. - T)
     return outputs
 
 def conv1d(inputs,

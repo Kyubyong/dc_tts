@@ -17,27 +17,6 @@ import os
 import unicodedata
 from num2words import num2words
 
-# def text_normalize(sent):
-#     '''Minimum text preprocessing'''
-#     def _strip_accents(s):
-#         return ''.join(c for c in unicodedata.normalize('NFD', s)
-#                        if unicodedata.category(c) != 'Mn')
-#
-#     normalized = []
-#     for word in sent.split():
-#         word = _strip_accents(word.lower())
-#         srch = re.match("\d[\d,.]*$", word)
-#         if srch:
-#             word = num2words(float(word.replace(",", "")))
-#         word = re.sub(u"[-—-]", " ", word)
-#         word = re.sub("[^ a-z'.?]", "", word)
-#         normalized.append(word)
-#     normalized = " ".join(normalized)
-#     normalized = re.sub("[ ]{2,}", " ", normalized)
-#     normalized = normalized.strip()
-#
-#     return normalized
-
 def text_normalize(sent):
     '''Minimum text preprocessing'''
     def _strip_accents(s):
@@ -76,7 +55,7 @@ def load_data(training=True):
     char2idx, idx2char = load_vocab()
 
     # Parse
-    texts, mels, mags = [], [], []
+    lengths, texts, mels, mags = [], [], [], []
     num_samples = 1
     if hp.data == "LJSpeech-1.0":
         metadata = os.path.join(hp.data, 'metadata.csv')
@@ -84,15 +63,16 @@ def load_data(training=True):
             fname, _, sent = line.strip().split("|")
             sent = text_normalize(sent) + "E" # text normalization, E: EOS
             if len(sent) <= hp.N:
+                lengths.append(len(sent))
                 texts.append(np.array([char2idx[char] for char in sent], np.int32).tostring())
                 mels.append(os.path.join(hp.data, "mels", fname + ".npy"))
                 mags.append(os.path.join(hp.data, "mags", fname + ".npy"))
 
                 if num_samples==hp.B:
-                    if training: texts, mels, mags = [], [], []
+                    if training: lengths, texts, mels, mags = [], [], [], []
                     else: # for evaluation
                         num_samples += 1
-                        return texts, mels, mags
+                        return lengths, texts, mels, mags
                 num_samples += 1
     else: # nick
         metadata = os.path.join(hp.data, 'metadata.tsv')
@@ -100,17 +80,18 @@ def load_data(training=True):
             fname, sent = line.strip().split("\t")
             sent = text_normalize(sent) + "E"  # text normalization, E: EOS
             if len(sent) <= hp.N:
+                lengths.append(len(sent))
                 texts.append(np.array([char2idx[char] for char in sent], np.int32).tostring())
                 mels.append(os.path.join(hp.data, "mels", fname.split("/")[-1].replace(".wav", ".npy")))
                 mags.append(os.path.join(hp.data, "mags", fname.split("/")[-1].replace(".wav", ".npy")))
 
                 if num_samples==hp.B:
-                    if training: texts, mels, mags = [], [], []
+                    if training: lengths, texts, mels, mags = [], [], [], []
                     else: # for evaluation
                         num_samples += 1
-                        return texts, mels, mags
+                        return lengths, texts, mels, mags
                 num_samples += 1
-    return texts, mels, mags
+    return lengths, texts, mels, mags
 
 def load_test_data():
     # Load vocabulary
@@ -123,45 +104,45 @@ def load_test_data():
         if len(sent) <= hp.N:
             sent += "P"*(hp.N-len(sent))
             texts.append([char2idx[char] for char in sent])
-    texts = np.array(texts, np.int32)
     return texts
 
 def get_batch():
     """Loads training data and put them in queues"""
     with tf.device('/cpu:0'):
         # Load data
-        _texts, _mels, _mags = load_data()
+        _lengths, _texts, _mels, _mags = load_data()
 
         # Calc total batch count
         num_batch = len(_texts) // hp.B
          
         # Convert to string tensor
+        lengths = tf.convert_to_tensor(_lengths)
         texts = tf.convert_to_tensor(_texts)
         mels = tf.convert_to_tensor(_mels)
         mags = tf.convert_to_tensor(_mags)
-         
+
         # Create Queues
-        text, mel, mag = tf.train.slice_input_producer([texts, mels, mags], shuffle=True)
+        length, text, mel, mag = tf.train.slice_input_producer([lengths, texts, mels, mags], shuffle=True)
 
         # Decoding
         text = tf.decode_raw(text, tf.int32) # (None,)
         mel = tf.py_func(lambda x:np.load(x), [mel], tf.float32) # (None, n_mels)
         mag = tf.py_func(lambda x:np.load(x), [mag], tf.float32) # (None, 1+n_fft/2)
 
-        # Padding
-        text = tf.pad(text, ((0, hp.N),))[:hp.N] # (N,)
-        mel = tf.pad(mel, ((0, hp.T), (0, 0)))[:hp.T] # (T, n_mels)
-        mag = tf.pad(mag, ((0, hp.T), (0, 0)))[:hp.T] # (T, 1+n_fft/2)
+        # Shape information
+        mel.set_shape((None, hp.n_mels))
+        mag.set_shape((None, hp.n_fft//2+1))
 
         # Reduction
         mel = mel[::hp.r, :] # (T/r, n_mels)
 
-        # create batch queues
-        texts, mels, mags = tf.train.batch([text, mel, mag],
-                                shapes=[(hp.N,), (hp.T//hp.r, hp.n_mels), (hp.T, 1+hp.n_fft//2)],
-                                num_threads=32,
-                                batch_size=hp.B, 
-                                capacity=hp.B*32,   
-                                dynamic_pad=False)
+        _, (texts, mels, mags) = tf.contrib.training.bucket_by_sequence_length(
+                                        input_length=length,
+                                        tensors=[text, mel, mag],
+                                        batch_size=hp.B,
+                                        bucket_boundaries=[i for i in range(10, hp.N, 10)],
+                                        num_threads=32,
+                                        capacity=hp.B * 32,
+                                        dynamic_pad=True)
 
     return texts, mels, mags, num_batch
