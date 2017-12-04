@@ -19,14 +19,13 @@ from data_load import load_data
 def eval():
     # Load data
     lengths, texts, mels, mags = load_data(training=False)
-    seqlen = max(lengths)
 
     L = np.array([np.fromstring(text, np.int32) for text in texts])
     mels = np.array([np.load(mel) for mel in mels])
     mags = np.array([np.load(mag) for mag in mags])
 
     # Padding
-    L = np.array([np.pad(each, ((0, seqlen),), "constant")[:seqlen] for each in L])
+    L = np.array([np.pad(each, ((0, hp.N),), "constant")[:hp.N] for each in L])
     mels = np.array([np.pad(each, ((0, hp.T), (0, 0)), "constant")[:hp.T] for each in mels])
     mags = np.array([np.pad(each, ((0, hp.T), (0, 0)), "constant")[:hp.T] for each in mags])
 
