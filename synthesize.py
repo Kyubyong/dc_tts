@@ -17,6 +17,8 @@ from utils import *
 from data_load import load_test_data
 from scipy.io.wavfile import write
 
+
+
 def synthesize():
     # Load data
     X = load_test_data()

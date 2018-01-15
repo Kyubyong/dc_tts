@@ -6,11 +6,11 @@ https://www.github.com/kyubyong/dc_tts
 '''
 import math
 
-def get_T(duration, sr, hop_length, r):
+def get_max_T(max_duration, sr, hop_length, r):
     '''Calculates number of paddings for reduction'''
     def _roundup(x):
         return math.ceil(x * .1) * 10
-    T = _roundup(duration*sr/hop_length)
+    T = _roundup(max_duration*sr/hop_length)
     num_paddings = r - (T % r) if T % r != 0 else 0
     T += num_paddings
     return T
@@ -31,7 +31,7 @@ class Hyperparams:
 
     # Model
     r = 4 # Reduction factor. Do not change this.
-    dropout_rate = 0
+    dropout_rate = 0.1
     vocab_size = 32 # [PE a-z'.?]
     e = 128 # == embedding
     d = 256
@@ -39,15 +39,18 @@ class Hyperparams:
     attention_win_size = 3
 
     # data
-    data = 'LJSpeech-1.0'#'nick'### # or 'nick (internal)'
-    max_duration = 10.0 # Maximum length of a sound file in seconds.
-    N = 180 # Maximum number of characters.
-    T = int(get_T(max_duration, sr, hop_length, r)) # Maximum number of frames
+    data = 'nick' #'LJSpeech-1.0'#### # or 'nick (internal)'
+    max_duration = 15.0 # Maximum length of a sound file in seconds.
+    max_N = 300 # Maximum number of characters.
+    max_T = int(get_max_T(max_duration, sr, hop_length, r)) # Maximum number of frames
+
     # training scheme
-    lr, beta1, beta2, eps = 0.001, 0.5, 0.99, 10e-6
-    logdir = "logdir/L03"
-    sampledir = 'samples/L03'
-    B = 16 # batch size
+    lr, beta1, beta2, eps = 0.002, 0.5, 0.99, 10e-6
+    # logdir = "logdir/L107" #lr=0.001
+    # logdir = "logdir/L108" #lr=0.0005
+    logdir = "logdir/L110" #lr=0.002
+    sampledir = 'samples/L104'
+    B = 32 # batch size
     max_grad_val = 5
     max_grad_norm = 100
-    num_iterations = 1000000
+    num_iterations = 2000000

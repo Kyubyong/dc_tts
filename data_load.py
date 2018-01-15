@@ -15,34 +15,36 @@ import codecs
 import re
 import os
 import unicodedata
+import glob
 from num2words import num2words
+import librosa
 
-def text_normalize(sent):
-    '''Minimum text preprocessing'''
-    def _strip_accents(s):
-        return ''.join(c for c in unicodedata.normalize('NFD', s)
-                       if unicodedata.category(c) != 'Mn')
-
-    # sentence level
-    sent = _strip_accents(sent.lower())
-    sent = re.sub(u"[-—-]", " ", sent)
-    sent = re.sub("[^ a-z.?\d]", "", sent)
-
-    # word level
-    normalized = []
-    for word in sent.split():
-        srch = re.match("\d[\d,.]*$", word)
-        if srch:
-            word = num2words(float(word.replace(",", "")))
-        abb2exp = {'mr.':'mister', 'mrs': "misess", "dr.":"doctor", "no.": "number", "st.": "saint", "rev.": "reverend", "etc.":"et cetera"}
-        word = abb2exp.get(word, word)
-        normalized.append(word)
-    normalized = " ".join(normalized)
-    normalized = normalized.replace(".", " ")
-    normalized = re.sub("[ ]{2,}", " ", normalized)
-    normalized = normalized.strip()
-
-    return normalized
+# def text_normalize(sent):
+#     '''Minimum text preprocessing'''
+#     def _strip_accents(s):
+#         return ''.join(c for c in unicodedata.normalize('NFD', s)
+#                        if unicodedata.category(c) != 'Mn')
+#
+#     # sentence level
+#     sent = _strip_accents(sent.lower())
+#     sent = re.sub(u"[-—-]", " ", sent)
+#     sent = re.sub("[^ a-z.?\d]", "", sent)
+#
+#     # word level
+#     normalized = []
+#     for word in sent.split():
+#         srch = re.match("\d[\d,.]*$", word)
+#         if srch:
+#             word = num2words(float(word.replace(",", "")))
+#         abb2exp = {'mr.':'mister', 'mrs': "misess", "dr.":"doctor", "no.": "number", "st.": "saint", "rev.": "reverend", "etc.":"et cetera"}
+#         word = abb2exp.get(word, word)
+#         normalized.append(word)
+#     normalized = " ".join(normalized)
+#     normalized = normalized.replace(".", " ")
+#     normalized = re.sub("[ ]{2,}", " ", normalized)
+#     normalized = normalized.strip()
+#
+#     return normalized
 
 def load_vocab():
     vocab = "PE abcdefghijklmnopqrstuvwxyz'.?"  # P: Padding E: End of Sentence
@@ -55,94 +57,103 @@ def load_data(training=True):
     char2idx, idx2char = load_vocab()
 
     # Parse
-    lengths, texts, mels, mags = [], [], [], []
+    fnames, ns, texts, mels, gts, mags = [], [], [], [], [], []
     num_samples = 1
-    if hp.data == "LJSpeech-1.0":
-        metadata = os.path.join(hp.data, 'metadata.csv')
-        for line in codecs.open(metadata, 'r', 'utf-8'):
-            fname, _, sent = line.strip().split("|")
-            sent = text_normalize(sent) + "E" # text normalization, E: EOS
-            if len(sent) <= hp.N:
-                lengths.append(len(sent))
-                texts.append(np.array([char2idx[char] for char in sent], np.int32).tostring())
-                mels.append(os.path.join(hp.data, "mels", fname + ".npy"))
-                mags.append(os.path.join(hp.data, "mags", fname + ".npy"))
+    transcript = os.path.join("/data/private/voice", hp.data, 'transcript.csv')
+    for line in codecs.open(transcript, 'r', 'utf-8'):
+        fname, _, sent, isspoken = line.strip().split("|")
+        # fname += ".wav"
 
-                if num_samples==hp.B:
-                    if training: lengths, texts, mels, mags = [], [], [], []
-                    else: # for evaluation
-                        num_samples += 1
-                        return lengths, texts, mels, mags
-                num_samples += 1
-    else: # nick
-        metadata = os.path.join(hp.data, 'metadata.tsv')
-        for line in codecs.open(metadata, 'r', 'utf-8'):
-            fname, sent = line.strip().split("\t")
-            sent = text_normalize(sent) + "E"  # text normalization, E: EOS
-            if len(sent) <= hp.N:
-                lengths.append(len(sent))
-                texts.append(np.array([char2idx[char] for char in sent], np.int32).tostring())
-                mels.append(os.path.join(hp.data, "mels", fname.split("/")[-1].replace(".wav", ".npy")))
-                mags.append(os.path.join(hp.data, "mags", fname.split("/")[-1].replace(".wav", ".npy")))
+        # Filtering
+        # if isspoken=="1": continue
+        if len(sent) > hp.max_N: continue
+        duration = librosa.get_duration(filename=os.path.join("/data/private/voice", hp.data, fname))
+        if duration > hp.max_duration: continue
 
-                if num_samples==hp.B:
-                    if training: lengths, texts, mels, mags = [], [], [], []
-                    else: # for evaluation
-                        num_samples += 1
-                        return lengths, texts, mels, mags
-                num_samples += 1
-    return lengths, texts, mels, mags
+        fname = os.path.basename(fname).replace(".wav", ".npy")
+        sent += "E"  # E: EOS
 
-def load_test_data():
-    # Load vocabulary
-    char2idx, idx2char = load_vocab()
+        fnames.append(fname)
+        ns.append(len(sent))
+        texts.append(np.array([char2idx[char] for char in sent if char in char2idx], np.int32).tostring())
+        mels.append(os.path.join(hp.data, "mels", fname))
+        gts.append(os.path.join(hp.data, "gts", fname))
+        mags.append(os.path.join(hp.data, "mags", fname))
 
-    # Parse
-    texts = []
-    for line in codecs.open('test_sents.txt', 'r', 'utf-8'):
-        sent = text_normalize(line).strip() + "E" # text normalization, E: EOS
-        if len(sent) <= hp.N:
-            sent += "P"*(hp.N-len(sent))
-            texts.append([char2idx[char] for char in sent])
-    return texts
+        if num_samples==hp.B:
+            if training: fnames, ns, texts, mels, gts, mags = [], [], [], [], [], []
+            else: # for evaluation
+                return fnames, ns, texts, mels, gts, mags
+        num_samples += 1
+
+    return fnames, ns, texts, mels, gts, mags
+
+# def load_test_data():
+#     # Load vocabulary
+#     char2idx, idx2char = load_vocab()
+#
+#     # Parse
+#     texts = []
+#     for line in codecs.open('test_sents.txt', 'r', 'utf-8'):
+#         sent = text_normalize(line).strip() + "E" # text normalization, E: EOS
+#         if len(sent) <= hp.N:
+#             sent += "P"*(hp.N-len(sent))
+#             texts.append([char2idx[char] for char in sent])
+#     return texts
 
 def get_batch():
     """Loads training data and put them in queues"""
     with tf.device('/cpu:0'):
         # Load data
-        _lengths, _texts, _mels, _mags = load_data()
+        fnames, ns, texts, mels, gts, mags = load_data()
+        maxlen, minlen = max(ns), min(ns)
 
         # Calc total batch count
-        num_batch = len(_texts) // hp.B
+        num_batch = len(texts) // hp.B
          
         # Convert to string tensor
-        lengths = tf.convert_to_tensor(_lengths)
-        texts = tf.convert_to_tensor(_texts)
-        mels = tf.convert_to_tensor(_mels)
-        mags = tf.convert_to_tensor(_mags)
+        fnames = tf.convert_to_tensor(fnames)
+        ns = tf.convert_to_tensor(ns)
+        texts = tf.convert_to_tensor(texts)
+        mels = tf.convert_to_tensor(mels)
+        gts = tf.convert_to_tensor(gts)
+        mags = tf.convert_to_tensor(mags)
 
         # Create Queues
-        length, text, mel, mag = tf.train.slice_input_producer([lengths, texts, mels, mags], shuffle=True)
+        fname, n, text, mel, gt, mag = tf.train.slice_input_producer([fnames, ns, texts, mels, gts, mags], shuffle=True)
 
         # Decoding
         text = tf.decode_raw(text, tf.int32) # (None,)
-        mel = tf.py_func(lambda x:np.load(x), [mel], tf.float32) # (None, n_mels)
-        mag = tf.py_func(lambda x:np.load(x), [mag], tf.float32) # (None, 1+n_fft/2)
+
+        def _load(mel, mag):
+            x, y = np.load(mel), np.load(mag)
+            t = x.shape[0]
+            num_paddings = hp.r - (t % hp.r) if t % hp.r != 0 else 0
+            x = np.pad(x, [[0, num_paddings], [0, 0]], mode="constant")
+            y = np.pad(y, [[0, num_paddings], [0, 0]], mode="constant")
+            x = x[::hp.r, :]  # (t/r, n_mels) <- reduction
+            return x, y
+
+        mel, mag = tf.py_func(_load, [mel, mag], [tf.float32, tf.float32]) # (None, n_mels)
+        gt = tf.py_func(lambda x:np.load(x), [gt], tf.float32) # (max_T, max_N)
+
+        # Get done flag
+        done = tf.ones_like(mel[:, 0], dtype=tf.int32)
 
         # Shape information
         mel.set_shape((None, hp.n_mels))
-        mag.set_shape((None, hp.n_fft//2+1))
+        mag.set_shape((None, hp.n_fft // 2 + 1))
+        done.set_shape((None,))
+        gt.set_shape((hp.max_N, hp.max_T//hp.r))
 
-        # Reduction
-        mel = mel[::hp.r, :] # (T/r, n_mels)
-
-        _, (texts, mels, mags) = tf.contrib.training.bucket_by_sequence_length(
-                                        input_length=length,
-                                        tensors=[text, mel, mag],
+        # Batching
+        _, (texts, mels, mags, dones, gts, fnames) = tf.contrib.training.bucket_by_sequence_length(
+                                        input_length=n,
+                                        tensors=[text, mel, mag, done, gt, fname],
                                         batch_size=hp.B,
-                                        bucket_boundaries=[i for i in range(10, hp.N, 10)],
+                                        bucket_boundaries=[i for i in range(minlen+1, maxlen-1, 20)],
                                         num_threads=32,
-                                        capacity=hp.B * 32,
+                                        capacity=hp.B * 4,
                                         dynamic_pad=True)
 
-    return texts, mels, mags, num_batch
+    return fnames, texts, mels, dones, gts, mags, num_batch

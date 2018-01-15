@@ -12,7 +12,7 @@ import tensorflow as tf
 import numpy as np
 
 
-def embed(inputs, vocab_size, num_units, zero_pad=False, scope="embedding", reuse=None):
+def embed(inputs, vocab_size, num_units, zero_pad=True, scope="embedding", reuse=None):
     '''Embeds a given tensor. 
     
     Args:
@@ -47,6 +47,7 @@ def embed(inputs, vocab_size, num_units, zero_pad=False, scope="embedding", reus
 def normalize(inputs,
               type="bn",
               epsilon=1e-8,
+              decay=0.999,
               training=True,
               reuse=None,
               scope="normalize"):
@@ -67,20 +68,33 @@ def normalize(inputs,
       A tensor with the same shape and data dtype as `inputs`.
     '''
     if type == "bn":
-        outputs = tf.layers.batch_normalization(inputs=inputs,
-                                               training=training,
-                                               reuse=reuse)
+        # param_dim = inputs.get_shape()[-1:]
+        # scale = tf.Variable(tf.ones([param_dim]))
+        # beta = tf.Variable(tf.zeros([param_dim]))
+        # pop_mean = tf.Variable(tf.zeros([param_dim]), trainable=False)
+        # pop_var = tf.Variable(tf.ones([param_dim]), trainable=False)
+        #
+        # if training:
+        #     batch_mean, batch_var = tf.nn.moments(inputs, [0], keep_dims=True)
+        #     print(inputs)
+        #     print(batch_mean)
+        #     print(batch_var)
+        #     print(scale, beta, pop_mean, pop_var)
+        #     train_mean = tf.assign(pop_mean,
+        #                            pop_mean * decay + batch_mean * (1 - decay))
+        #     train_var = tf.assign(pop_var,
+        #                           pop_var * decay + batch_var * (1 - decay))
+        #     with tf.control_dependencies([train_mean, train_var]):
+        #         return tf.nn.batch_normalization(inputs, batch_mean, batch_var, beta, scale, epsilon)
+        # else:
+        #     return tf.nn.batch_normalization(inputs, pop_mean, pop_var, beta, scale, epsilon)
+        outputs = tf.layers.batch_normalization(inputs,
+                                                training=training)
     elif type in ("ln", "ins"):
-        reduction_axis = -1 if type == "ln" else 1
-        with tf.variable_scope(scope, reuse=reuse):
-            inputs_shape = inputs.get_shape()
-            params_shape = inputs_shape[-1:]
-
-            mean, variance = tf.nn.moments(inputs, [reduction_axis], keep_dims=True)
-            beta = tf.Variable(tf.zeros(params_shape))
-            gamma = tf.Variable(tf.ones(params_shape))
-            normalized = (inputs - mean) * tf.rsqrt(variance + epsilon)
-            outputs = gamma * normalized + beta
+        if type=="ln":
+            outputs = tf.contrib.layers.layer_norm(inputs,
+                                                   begin_norm_axis=-1,
+                                                   scope=scope)
     else:
         outputs = inputs
 
@@ -157,6 +171,63 @@ def conv1d(inputs,
         if activation_fn is not None:
             tensor = activation_fn(tensor)
 
+        tensor \
+            = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
+
+    return tensor
+
+def hc(inputs,
+       filters=None,
+       size=1,
+       rate=1,
+       padding="SAME",
+       dropout_rate=0,
+       use_bias=True,
+       norm_type=None,
+       activation_fn=None,
+       training=True,
+       scope="hc",
+       reuse=None):
+    '''
+    Args:
+      inputs: A 3-D tensor with shape of [batch, time, depth].
+      filters: An int. Number of outputs (=activation maps)
+      size: An int. Filter size.
+      rate: An int. Dilation rate.
+      padding: Either `same` or `valid` or `causal` (case-insensitive).
+      use_bias: A boolean.
+      scope: Optional scope for `variable_scope`.
+      reuse: Boolean, whether to reuse the weights of a previous layer
+        by the same name.
+
+    Returns:
+      A masked tensor of the same shape and dtypes as `inputs`.
+    '''
+    _inputs = inputs
+    with tf.variable_scope(scope):
+        if padding.lower() == "causal":
+            # pre-padding for causality
+            pad_len = (size - 1) * rate  # padding size
+            inputs = tf.pad(inputs, [[0, 0], [pad_len, 0], [0, 0]])
+            padding = "valid"
+
+        if filters is None:
+            filters = inputs.get_shape().as_list()[-1]
+
+
+        params = {"inputs": inputs, "filters": 2*filters, "kernel_size": size,
+                  "dilation_rate": rate, "padding": padding, "use_bias": use_bias,
+                  "kernel_initializer": tf.contrib.layers.variance_scaling_initializer(), "reuse": reuse}
+
+        tensor = tf.layers.conv1d(**params)
+        H1, H2 = tf.split(tensor, 2, axis=-1)
+        H1 = normalize(H1, type=norm_type, training=training, scope="H1")
+        H2 = normalize(H2, type=norm_type, training=training, scope="H2")
+        H1 = tf.nn.sigmoid(H1, "gate")
+        H2 = activation_fn(H2, "info") if activation_fn is not None else H2
+        tensor = H1*H2 + (1.-H1)*_inputs
+
+
         tensor = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
 
     return tensor
@@ -184,6 +255,7 @@ def conv1d_transpose(inputs,
                                    strides=(1, stride),
                                    padding=padding,
                                    activation=None,
+                                   kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                    use_bias=use_bias)
         tensor = tf.squeeze(tensor, 1)
         tensor = normalize(tensor, type=norm_type, training=training)
