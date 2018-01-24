@@ -8,7 +8,7 @@ from __future__ import print_function, division
 
 import numpy as np
 import librosa
-import copy
+import os, copy
 import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
@@ -17,17 +17,19 @@ from scipy import signal
 from hyperparams import Hyperparams as hp
 import tensorflow as tf
 
-def get_spectrograms(sound_file):
-    '''Returns normalized log(melspectrogram) and log(magnitude) from `sound_file`.
+def get_spectrograms(fpath):
+    '''Parse the wave file in `fpath` and
+    Returns normalized melspectrogram and linear spectrogram.
+
     Args:
-      sound_file: A string. The full path of a sound file.
+      fpath: A string. The full path of a sound file.
 
     Returns:
-      mel: A 2d array of shape (T, n_mels) <- Transposed
-      mag: A 2d array of shape (T, 1+n_fft/2) <- Transposed
+      mel: A 2d array of shape (T, n_mels) and dtype of float32.
+      mag: A 2d array of shape (T, 1+n_fft/2) and dtype of float32.
     '''
     # Loading sound file
-    y, sr = librosa.load(sound_file, sr=hp.sr)
+    y, sr = librosa.load(fpath, sr=hp.sr)
 
     # Trimming
     y, _ = librosa.effects.trim(y)
@@ -53,7 +55,7 @@ def get_spectrograms(sound_file):
     mag = 20 * np.log10(np.maximum(1e-5, mag))
 
     # normalize
-    mel = np.clip((mel + hp.max_db) / hp.max_db, 1e-8, 1)
+    mel = np.clip((mel - hp.ref_db + hp.max_db) / hp.max_db, 1e-8, 1)
     mag = np.clip((mag - hp.ref_db + hp.max_db) / hp.max_db, 1e-8, 1)
 
     # Transpose
@@ -63,7 +65,14 @@ def get_spectrograms(sound_file):
     return mel, mag
 
 def spectrogram2wav(mag):
-    '''# Generate wave file from spectrogram'''
+    '''# Generate wave file from linear magnitude spectrogram
+
+    Args:
+      mag: A numpy array of (T, 1+n_fft//2)
+
+    Returns:
+      wav: A 1-D numpy array.
+    '''
     # transpose
     mag = mag.T
 
@@ -74,7 +83,7 @@ def spectrogram2wav(mag):
     mag = np.power(10.0, mag * 0.05)
 
     # wav reconstruction
-    wav = griffin_lim(mag)
+    wav = griffin_lim(mag**hp.power)
 
     # de-preemphasis
     wav = signal.lfilter([1], [1, -hp.preemphasis], wav)
@@ -82,11 +91,10 @@ def spectrogram2wav(mag):
     # trim
     wav, _ = librosa.effects.trim(wav)
 
-    return wav
+    return wav.astype(np.float32)
 
 def griffin_lim(spectrogram):
-    '''Applies Griffin-Lim's raw.
-    '''
+    '''Applies Griffin-Lim's raw.'''
     X_best = copy.deepcopy(spectrogram)
     for i in range(hp.n_iter):
         X_t = invert_spectrogram(X_best)
@@ -99,35 +107,56 @@ def griffin_lim(spectrogram):
     return y
 
 def invert_spectrogram(spectrogram):
-    '''
-    spectrogram: [f, t]
+    '''Applies inverse fft.
+    Args:
+      spectrogram: [1+n_fft//2, t]
     '''
     return librosa.istft(spectrogram, hp.hop_length, win_length=hp.win_length, window="hann")
 
-def plot_alignment(alignment, gs, dir):
-    """Plots the alignment
-    alignments: A list of (numpy) matrix of shape (encoder_steps, decoder_steps)
-    gs : (int) global step
+def plot_alignment(alignment, gs, dir=hp.logdir):
+    """Plots the alignment.
+
+    Args:
+      alignment: A numpy array with shape of (encoder_steps, decoder_steps)
+      gs: (int) global step.
+      dir: Output path.
     """
+    if not os.path.exists(dir): os.mkdir(dir)
+
     fig, ax = plt.subplots()
     im = ax.imshow(alignment)
-    # gt = ax2.imshow(gt)
-    # ax.axis('on')
 
-    # cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     fig.colorbar(im)
     plt.title('{} Steps'.format(gs))
     plt.savefig('{}/alignment_{}.png'.format(dir, gs), format='png')
 
-def guided_attention(n, t, g=0.2):
-    W = np.zeros((hp.max_N, hp.max_T//hp.r), dtype=np.float32)
+def guided_attention(g=0.2):
+    '''Guided attention. Refer to page 3 on the paper.'''
+    W = np.zeros((hp.max_N, hp.max_T), dtype=np.float32)
     for n_pos in range(W.shape[0]):
         for t_pos in range(W.shape[1]):
-            W[n_pos, t_pos] = 1 - np.exp(-(t_pos/float(t) - n_pos/float(n))**2 / (2*g*g))
+            W[n_pos, t_pos] = 1 - np.exp(-(t_pos / float(hp.max_T) - n_pos / float(hp.max_N)) ** 2 / (2 * g * g))
     return W
 
-def learning_rate_decay(init_lr, global_step):
-    # Noam scheme from tensor2tensor:
-    warmup_steps = 10000.0
-    step = tf.cast(global_step + 1, dtype=tf.float32)
+def learning_rate_decay(init_lr, global_step, warmup_steps = 4000.0):
+    '''Noam scheme from tensor2tensor'''
+    step = tf.to_float(global_step + 1)
     return init_lr * warmup_steps**0.5 * tf.minimum(step * warmup_steps**-1.5, step**-0.5)
+
+def load_spectrograms(fpath):
+    '''Read the wave file in `fpath`
+    and extracts spectrograms'''
+
+    fname = os.path.basename(fpath)
+    mel, mag = get_spectrograms(fpath)
+    t = mel.shape[0]
+
+    # Marginal padding for reduction shape sync.
+    num_paddings = hp.r - (t % hp.r) if t % hp.r != 0 else 0
+    mel = np.pad(mel, [[0, num_paddings], [0, 0]], mode="constant")
+    mag = np.pad(mag, [[0, num_paddings], [0, 0]], mode="constant")
+
+    # Reduction
+    mel = mel[::hp.r, :]
+    return fname, mel, mag
+

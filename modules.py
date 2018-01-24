@@ -7,9 +7,7 @@ https://www.github.com/kyubyong/dc_tts
 
 from __future__ import print_function, division
 
-from hyperparams import Hyperparams as hp
 import tensorflow as tf
-import numpy as np
 
 
 def embed(inputs, vocab_size, num_units, zero_pad=True, scope="embedding", reuse=None):
@@ -45,59 +43,23 @@ def embed(inputs, vocab_size, num_units, zero_pad=True, scope="embedding", reuse
 
 
 def normalize(inputs,
-              type="bn",
-              epsilon=1e-8,
-              decay=0.999,
-              training=True,
-              reuse=None,
-              scope="normalize"):
-    '''Applies {batch|layer} normalization.
+              scope="normalize",
+              reuse=None):
+    '''Applies layer normalization that normalizes along the last axis.
 
     Args:
       inputs: A tensor with 2 or more dimensions, where the first dimension has
-        `batch_size`. If type is `bn`, the normalization is over all but
-        the last dimension. Or if type is `ln`, the normalization is over
-        the last dimension.
-      type: A string. Either "bn" or "ln".
-      decay: Decay for the moving average.
-      is_training: Whether or not the layer is in training mode. W
-      activation_fn: Activation function.
+        `batch_size`. The normalization is over the last dimension.
       scope: Optional scope for `variable_scope`.
+      reuse: Boolean, whether to reuse the weights of a previous layer
+        by the same name.
 
     Returns:
       A tensor with the same shape and data dtype as `inputs`.
     '''
-    if type == "bn":
-        # param_dim = inputs.get_shape()[-1:]
-        # scale = tf.Variable(tf.ones([param_dim]))
-        # beta = tf.Variable(tf.zeros([param_dim]))
-        # pop_mean = tf.Variable(tf.zeros([param_dim]), trainable=False)
-        # pop_var = tf.Variable(tf.ones([param_dim]), trainable=False)
-        #
-        # if training:
-        #     batch_mean, batch_var = tf.nn.moments(inputs, [0], keep_dims=True)
-        #     print(inputs)
-        #     print(batch_mean)
-        #     print(batch_var)
-        #     print(scale, beta, pop_mean, pop_var)
-        #     train_mean = tf.assign(pop_mean,
-        #                            pop_mean * decay + batch_mean * (1 - decay))
-        #     train_var = tf.assign(pop_var,
-        #                           pop_var * decay + batch_var * (1 - decay))
-        #     with tf.control_dependencies([train_mean, train_var]):
-        #         return tf.nn.batch_normalization(inputs, batch_mean, batch_var, beta, scale, epsilon)
-        # else:
-        #     return tf.nn.batch_normalization(inputs, pop_mean, pop_var, beta, scale, epsilon)
-        outputs = tf.layers.batch_normalization(inputs,
-                                                training=training)
-    elif type in ("ln", "ins"):
-        if type=="ln":
-            outputs = tf.contrib.layers.layer_norm(inputs,
-                                                   begin_norm_axis=-1,
-                                                   scope=scope)
-    else:
-        outputs = inputs
-
+    outputs = tf.contrib.layers.layer_norm(inputs,
+                                           begin_norm_axis=-1,
+                                           scope=scope)
     return outputs
 
 
@@ -132,7 +94,6 @@ def conv1d(inputs,
            padding="SAME",
            dropout_rate=0,
            use_bias=True,
-           norm_type=None,
            activation_fn=None,
            training=True,
            scope="conv1d",
@@ -144,7 +105,10 @@ def conv1d(inputs,
       size: An int. Filter size.
       rate: An int. Dilation rate.
       padding: Either `same` or `valid` or `causal` (case-insensitive).
+      dropout_rate: A float of [0, 1].
       use_bias: A boolean.
+      activation_fn: A string.
+      training: A boolean. If True, dropout is applied.
       scope: Optional scope for `variable_scope`.
       reuse: Boolean, whether to reuse the weights of a previous layer
         by the same name.
@@ -167,12 +131,11 @@ def conv1d(inputs,
                   "kernel_initializer": tf.contrib.layers.variance_scaling_initializer(), "reuse": reuse}
 
         tensor = tf.layers.conv1d(**params)
-        tensor = normalize(tensor, type=norm_type, training=training)
+        tensor = normalize(tensor)
         if activation_fn is not None:
             tensor = activation_fn(tensor)
 
-        tensor \
-            = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
+        tensor = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
 
     return tensor
 
@@ -183,7 +146,6 @@ def hc(inputs,
        padding="SAME",
        dropout_rate=0,
        use_bias=True,
-       norm_type=None,
        activation_fn=None,
        training=True,
        scope="hc",
@@ -196,6 +158,8 @@ def hc(inputs,
       rate: An int. Dilation rate.
       padding: Either `same` or `valid` or `causal` (case-insensitive).
       use_bias: A boolean.
+      activation_fn: A string.
+      training: A boolean. If True, dropout is applied.
       scope: Optional scope for `variable_scope`.
       reuse: Boolean, whether to reuse the weights of a previous layer
         by the same name.
@@ -221,12 +185,11 @@ def hc(inputs,
 
         tensor = tf.layers.conv1d(**params)
         H1, H2 = tf.split(tensor, 2, axis=-1)
-        H1 = normalize(H1, type=norm_type, training=training, scope="H1")
-        H2 = normalize(H2, type=norm_type, training=training, scope="H2")
+        H1 = normalize(H1, scope="H1")
+        H2 = normalize(H2, scope="H2")
         H1 = tf.nn.sigmoid(H1, "gate")
         H2 = activation_fn(H2, "info") if activation_fn is not None else H2
         tensor = H1*H2 + (1.-H1)*_inputs
-
 
         tensor = tf.layers.dropout(tensor, rate=dropout_rate, training=training)
 
@@ -238,13 +201,29 @@ def conv1d_transpose(inputs,
                      stride=2,
                      padding='same',
                      dropout_rate=0,
-                     norm_type=None,
+                     use_bias=True,
                      activation=None,
                      training=True,
-                     use_bias=True,
                      scope="conv1d_transpose",
                      reuse=None):
+    '''
+        Args:
+          inputs: A 3-D tensor with shape of [batch, time, depth].
+          filters: An int. Number of outputs (=activation maps)
+          size: An int. Filter size.
+          rate: An int. Dilation rate.
+          padding: Either `same` or `valid` or `causal` (case-insensitive).
+          dropout_rate: A float of [0, 1].
+          use_bias: A boolean.
+          activation_fn: A string.
+          training: A boolean. If True, dropout is applied.
+          scope: Optional scope for `variable_scope`.
+          reuse: Boolean, whether to reuse the weights of a previous layer
+            by the same name.
 
+        Returns:
+          A tensor of the shape with [batch, time*2, depth].
+        '''
     with tf.variable_scope(scope, reuse=reuse):
         if filters is None:
             filters = inputs.get_shape().as_list()[-1]
@@ -258,7 +237,7 @@ def conv1d_transpose(inputs,
                                    kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                    use_bias=use_bias)
         tensor = tf.squeeze(tensor, 1)
-        tensor = normalize(tensor, type=norm_type, training=training)
+        tensor = normalize(tensor)
         if activation is not None:
             tensor = activation(tensor)
 
