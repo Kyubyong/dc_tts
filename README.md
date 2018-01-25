@@ -42,5 +42,10 @@ I generate speech samples based on [Harvard Sentences](http://www.cs.columbia.ed
 | Nick      | [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_40k) |
 | Kate| [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_40k)      |
 
+## Notes
 
-
+  * The paper didn't mention normalization, but I added layer normalization.
+  * The paper set the learning rate to 0.001, but I decayed it.
+  * I tried to train Text2Mel and SSRN simultaneously, but it didn't work.
+  * I guess separating those two networks mitigates the burden of training.
+  
