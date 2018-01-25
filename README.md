@@ -18,7 +18,7 @@ I test the model on three different speech datasets.
   3. [Kate Winslet's Audiobook](https://www.audible.com.au/pd/Classics/Therese-Raquin-Audiobook/B00FF0SLW4/ref=a_search_c4_1_3_srTtl?qid=1516854754&sr=1-3)
 
 LJ Speech Dataset is recently widely used as a benchmark dataset in the TTS task because it is publicly available, and it has 24 hours of reasonable quality samples.
-Nick's and Kate's audiobooks are additionally test to see if the model can learn even with less data, variable speech samples. They are 18 hours and 5 hours long, respectively.
+Nick's and Kate's audiobooks are additionally used to see if the model can learn even with less data, variable speech samples. They are 18 hours and 5 hours long, respectively.
 
 
 ## Training
