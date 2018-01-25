@@ -59,7 +59,8 @@ def normalize(inputs,
     '''
     outputs = tf.contrib.layers.layer_norm(inputs,
                                            begin_norm_axis=-1,
-                                           scope=scope)
+                                           scope=scope,
+                                           reuse=reuse)
     return outputs
 
 

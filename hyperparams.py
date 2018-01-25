@@ -30,7 +30,7 @@ class Hyperparams:
 
     # data
     # data = "/data/private/voice/LJSpeech-1.0"
-    data = "/data/private/voice/nick"
+    data = "/data/private/voice/kate"
     test_data = 'harvard_sentences.txt'
     vocab = "PE abcdefghijklmnopqrstuvwxyz'.?" # P: Padding, E: EOS.
     max_N = 180 # Maximum number of characters.
@@ -38,7 +38,7 @@ class Hyperparams:
 
     # training scheme
     lr = 0.001 # Initial learning rate.
-    logdir = "logdir/nick01"
+    logdir = "logdir/kate01"
     sampledir = 'samples'
     B = 32 # batch size
     num_iterations = 2000000
