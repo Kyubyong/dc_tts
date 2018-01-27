@@ -15,7 +15,7 @@ I implement yet another text-to-speech model, dc-tts, introduced in [Efficiently
 I train the model on three different speech datasets. <br>
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nick_Offerman_at_UMBC_%28cropped%29.jpg/440px-Nick_Offerman_at_UMBC_%28cropped%29.jpg" height="200" align="right">
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Kate_Winslet_March_18%2C_2014_%28headshot%29.jpg/890px-Kate_Winslet_March_18%2C_2014_%28headshot%29.jpg" height="200" align="right"> <img src="https://image.shutterstock.com/z/stock-vector-lj-letters-four-colors-in-abstract-background-logo-design-identity-in-circle-alphabet-letter-418687846.jpg" height="200" align="right">
-<1. [LJ Speech Dataset](https://keithito.com/LJ-Speech-Dataset/) <br/> 2. [Nick Offerman's Audiobooks](https://www.audible.com.au/search?searchNarrator=Nick+Offerman) <br/>3. [Kate Winslet's Audiobook](https://www.audible.com.au/pd/Classics/Therese-Raquin-Audiobook/B00FF0SLW4/ref=a_search_c4_1_3_srTtl?qid=1516854754&sr=1-3)
+1. [LJ Speech Dataset](https://keithito.com/LJ-Speech-Dataset/) <br/> 2. [Nick Offerman's Audiobooks](https://www.audible.com.au/search?searchNarrator=Nick+Offerman) <br/>3. [Kate Winslet's Audiobook](https://www.audible.com.au/pd/Classics/Therese-Raquin-Audiobook/B00FF0SLW4/ref=a_search_c4_1_3_srTtl?qid=1516854754&sr=1-3)
 
 LJ Speech Dataset is recently widely used as a benchmark dataset in the TTS task because it is publicly available, and it has 24 hours of reasonable quality samples.
 Nick's and Kate's audiobooks are additionally used to see if the model can learn even with less data, variable speech samples. They are 18 hours and 5 hours long, respectively.
