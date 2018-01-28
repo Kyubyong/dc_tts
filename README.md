@@ -4,7 +4,7 @@ I implement yet another text-to-speech model, dc-tts, introduced in [Efficiently
 
 ## Requirements
   * NumPy >= 1.11.1
-  * TensorFlow == 1.3 (Note that the API of `tf.contrib.layers.layer_norm` has changed since 1.3)
+  * TensorFlow >= 1.3 (Note that the API of `tf.contrib.layers.layer_norm` has changed since 1.3)
   * librosa
   * tqdm
   * matplotlib
@@ -58,4 +58,5 @@ I generate speech samples based on [Harvard Sentences](http://www.cs.columbia.ed
   * The authors claimed that the model can be trained within a day, but it was not true for me. However obviously this is much fater than Tacotron as it uses only convolution layers.
   * Thanks to the guided attention, the attention plot looks monotonic almost from the beginning. I guess this seems to hold the aligment tight so it won't lose track.
   * The paper didn't mention dropouts. I applied them as I believe it helps for regularization.
+  * Check also other TTS models such as [Tacotron](https://github.com/kyubyong/tacotron) and [Deep Voice 3](https://github.com/kyubyong/deepvoice3).
   
