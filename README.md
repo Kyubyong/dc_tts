@@ -46,16 +46,16 @@ I generate speech samples based on [Harvard Sentences](http://www.cs.columbia.ed
 
 | Dataset       | Samples |
 | :----- |:-------------|
-| LJ      | [50k](https://soundcloud.com/kyubyong-park/sets/dc_tts) [200k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_200k) |
-| Nick      | [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_40k) [170k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_170k)|
-| Kate| [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_40k) [160k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_160k)   |
+| LJ      | [50k](https://soundcloud.com/kyubyong-park/sets/dc_tts) [200k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_200k) [310k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_310k)|
+| Nick      | [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_40k) [170k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_170k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_300k)|
+| Kate| [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_40k) [160k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_160k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_300k)  |
 
 ## Notes
 
-  * The paper didn't mention normalization, but without normalizatio I couldn't get it to work. So I added layer normalization.
+  * The paper didn't mention normalization, but without normalization I couldn't get it to work. So I added layer normalization.
   * The paper fixed the learning rate to 0.001, but it didn't work for me. So I decayed it.
   * I tried to train Text2Mel and SSRN simultaneously, but it didn't work. I guess separating those two networks mitigates the burden of training.
-  * The authors claimed that the model can be trained within a day, but it was not true for me. However obviously this is much fater than Tacotron as it uses only convolution layers.
+  * The authors claimed that the model can be trained within a day, but unfortunately the luck was not mine. However obviously this is much fater than Tacotron as it uses only convolution layers.
   * Thanks to the guided attention, the attention plot looks monotonic almost from the beginning. I guess this seems to hold the aligment tight so it won't lose track.
   * The paper didn't mention dropouts. I applied them as I believe it helps for regularization.
   * Check also other TTS models such as [Tacotron](https://github.com/kyubyong/tacotron) and [Deep Voice 3](https://github.com/kyubyong/deepvoice3).
