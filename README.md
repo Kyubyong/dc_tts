@@ -46,9 +46,13 @@ I generate speech samples based on [Harvard Sentences](http://www.cs.columbia.ed
 
 | Dataset       | Samples |
 | :----- |:-------------|
-| LJ      | [50k](https://soundcloud.com/kyubyong-park/sets/dc_tts) [200k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_200k) [310k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_310k)|
-| Nick      | [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_40k) [170k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_170k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_300k)|
-| Kate| [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_40k) [160k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_160k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_300k)  |
+| LJ      | [50k](https://soundcloud.com/kyubyong-park/sets/dc_tts) [200k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_200k) [310k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_310k) [800k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_800k)|
+| Nick      | [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_40k) [170k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_170k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_300k) [800k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_800k)|
+| Kate| [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_40k) [160k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_160k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_300k) [800k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_800k) |
+
+## Pretrained Model for LJ
+
+Download [this](https://www.dropbox.com/s/1oyipstjxh2n5wo/LJ_logdir.tar?dl=0).
 
 ## Notes
 
