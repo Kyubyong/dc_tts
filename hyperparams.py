@@ -6,6 +6,9 @@ https://www.github.com/kyubyong/dc_tts
 '''
 class Hyperparams:
     '''Hyper parameters'''
+    # pipeline
+    prepro = True  # if True, run `python prepro.py` first before running `python train.py`.
+    
     # signal processing
     sr = 22050  # Sampling rate.
     n_fft = 2048  # fft points (samples)
