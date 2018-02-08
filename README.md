@@ -24,8 +24,8 @@ Nick's and Kate's audiobooks are additionally used to see if the model can learn
 
 ## Training
   * STEP 0. Download [LJ Speech Dataset](https://keithito.com/LJ-Speech-Dataset/) or prepare your own data.
-  * STEP 1. Adjust hyper parameters in `hyperparams.py`.
-  * STEP 2. Run `python train.py 1` for training Text2Mel.
+  * STEP 1. Adjust hyper parameters in `hyperparams.py`. (If you want to do preprocessing, set prepro True`.
+  * STEP 2. Run `python train.py 1` for training Text2Mel. (If you set prepro True, run python prepro.py first)
   * STEP 3. Run `python train.py 2` for training SSRN.
 
 You can do STEP 2 and 3 at the same time, if you have more than one gpu card.
