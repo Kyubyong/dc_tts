@@ -42,7 +42,7 @@ def load_data(mode="train"):
         if "LJ" in hp.data:
             # Parse
             fpaths, text_lengths, texts = [], [], []
-            transcript = os.path.join(hp.data, 'transcript.csv')
+            transcript = os.path.join(hp.data, 'metadata.csv')
             lines = codecs.open(transcript, 'r', 'utf-8').readlines()
             for line in lines:
                 fname, _, text = line.strip().split("|")
@@ -59,7 +59,7 @@ def load_data(mode="train"):
         else: # nick or kate
             # Parse
             fpaths, text_lengths, texts = [], [], []
-            transcript = os.path.join(hp.data, 'transcript.csv')
+            transcript = os.path.join(hp.data, 'metadata.csv')
             lines = codecs.open(transcript, 'r', 'utf-8').readlines()
             for line in lines:
                 fname, _, text, is_inside_quotes, duration = line.strip().split("|")
