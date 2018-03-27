@@ -129,6 +129,7 @@ def plot_alignment(alignment, gs, dir=hp.logdir):
     fig.colorbar(im)
     plt.title('{} Steps'.format(gs))
     plt.savefig('{}/alignment_{}.png'.format(dir, gs), format='png')
+    plt.close(fig)
 
 def guided_attention(g=0.2):
     '''Guided attention. Refer to page 3 on the paper.'''
