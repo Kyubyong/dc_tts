@@ -3,6 +3,7 @@
 I implement yet another text-to-speech model, dc-tts, introduced in [Efficiently Trainable Text-to-Speech System Based on Deep Convolutional Networks with Guided Attention](https://arxiv.org/abs/1710.08969). My goal, however, is not just replicating the paper. Rather, I'd like to gain insights about various sound projects.
 
 ## Requirements
+  * Python 2.x
   * NumPy >= 1.11.1
   * TensorFlow >= 1.3 (Note that the API of `tf.contrib.layers.layer_norm` has changed since 1.3)
   * librosa
