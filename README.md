@@ -10,12 +10,13 @@
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#data-preparation-aka-the-boring-part">Data preparation (aka the boring part)</a></li>
       </ul>
     </li>
+    <li><a href="#training">Training</a></li>
+    <li><a href="#testing">Testing</a></li>
+    <li><a href="#creating-the-android-app">Creating the android app</a></li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
@@ -81,7 +82,7 @@ The android app is basically just a wrapper that let you generate the audios, sa
 When you write something and press the play button in the app, the message is sent to the server.py, that launches synthesize.py and then sends the audio back to the android application.
 If you want to use the application outside your local network, make sure to set up the port forwarding, opening the access to the port written in the server.py. The default port is '1234'. You can change it if you want, but remember to change also the port in the MainActivity.java
 
-## Using the app
+## Usage
 
 Run 'python server.py' on your local pc. Then leave it on for as long as you need.
 
