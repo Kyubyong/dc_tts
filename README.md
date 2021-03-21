@@ -10,7 +10,7 @@
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#data-preparation-aka-the-boring-part">Data preparation (aka the boring part)</a></li>
+        <li><a href="#data-preparation">Data preparation</a></li>
       </ul>
     </li>
     <li><a href="#training">Training</a></li>
@@ -49,7 +49,7 @@ This is the most important part. If you want this to work, make sure you have th
 * []() An android phone (?)
 * []() Some time to lose
 
-### Data preparation (aka the boring part)
+### Data preparation
 
 In order to clone your voice you need around 200 samples of your voice, each one between 2-10 seconds. This means that you can clone anyone's voice with only 15-20 minutes of audio, thanks to transfer learning.
 1. First, you need to download the [pretrained model] if you want to make an english voice. Otherwise, find an online text-to-speech dataset of the desired language and train the model from scratch. For example, I made an italian version of my voice, starting from [this] dataset. [Here] you can download the italian pre-trained model I generated. 
