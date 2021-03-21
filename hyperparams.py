@@ -32,16 +32,18 @@ class Hyperparams:
     attention_win_size = 3
 
     # data
-    data = "/data/private/voice/LJSpeech-1.0"
+    data = r"C:\Users\Sax\Desktop\robe\Progetti\TTS\modello inglese\TTS\LJSpeech-1.1"
     # data = "/data/private/voice/kate"
     test_data = 'harvard_sentences.txt'
     vocab = "PE abcdefghijklmnopqrstuvwxyz'.?" # P: Padding, E: EOS.
-    max_N = 180 # Maximum number of characters.
-    max_T = 210 # Maximum number of mel frames.
+    #max_N = 180 # Maximum number of characters.
+    #max_T = 210 # Maximum number of mel frames.
+    max_N = 143
+    max_T = 120
 
     # training scheme
     lr = 0.001 # Initial learning rate.
     logdir = "logdir/LJ01"
     sampledir = 'samples'
-    B = 32 # batch size
-    num_iterations = 2000000
+    B = 16 # batch size
+    num_iterations = 1000
