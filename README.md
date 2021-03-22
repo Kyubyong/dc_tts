@@ -60,7 +60,7 @@ Make sure to put the pretrained model inside the 'logdir' directory.
 
 [pretrained model]: https://www.dropbox.com/s/1oyipstjxh2n5wo/LJ_logdir.tar?dl=0
 [this]: https://www.caito.de/2019/01/the-m-ailabs-speech-dataset/
-[here]: https://www.dropbox.com/s/y38m6hrucah3ua7/logdir.rar?dl=0
+[here]: https://www.dropbox.com/s/36t6l3c1192mgw4/logdir.rar?dl=0
 
 ## Training
 
@@ -87,7 +87,8 @@ By default the model only computes sentences shorter than 10 seconds, but in the
 
 ## Usage
 
-Run 'python server.py' on your local pc. Then leave it on for as long as you need.
+1. Import the Android_App folder into Android Studio and edit the ip address to match your ip in MainActivity.java.
+2. Run 'python server.py' on your local pc, then leave it on for as long as you need.
 
 ## Notes
 * []() In case something is not clear or you bump into some weird error, don't be afraid to ask.
