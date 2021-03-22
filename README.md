@@ -90,4 +90,5 @@ By default the model only computes sentences shorter than 10 seconds, but in the
 Run 'python server.py' on your local pc. Then leave it on for as long as you need.
 
 ## Notes
-In case something is not clear or you bump into some weird error, don't be afraid to ask.
+* []() In case something is not clear or you bump into some weird error, don't be afraid to ask.
+* []() This is my first android project, I had no prior experience on mobile development. So the code is probably not optimal, but it works.
