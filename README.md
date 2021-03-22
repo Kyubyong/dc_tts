@@ -19,7 +19,7 @@
     <li><a href="#testing">Testing</a></li>
     <li><a href="#creating-the-android-app">Creating the android app</a></li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#notes">License</a></li>
+    <li><a href="#notes">Notes</a></li>
   </ol>
 </details>
 
@@ -66,8 +66,8 @@ Make sure to put the pretrained model inside the 'logdir' directory.
 
 If you want to understand how the model works, you should read [this paper]. Otherwise, treat it as a black box and mechanically follow my steps.
 
-1. Edit hyperparams.py and make sure that prepro is set to True. Also, edit the data path to match the correct location inside your local pc.
-2. Run prepo.py
+1. Edit hyperparams.py and make sure that prepro is set to True. Also, edit the data path to match the correct location inside your local pc. Set the batch size to 16 or 32 depending on your ram. You can also tune max_N and max_T.
+2. Run prepo.py only one time. After this step you should see two new folders, 'megs' and 'mals'. If you change dataset, then delete megs and mals and run the prepo.py again.
 3. Run 'python train.py 1'. This is going to take a different amount of steps for each voice, but usually after 10k steps the result should already be decent.
 4. Run 'python train.py 2'. You have to train it at least 2k steps, otherwise the voice will not sound human.
 
