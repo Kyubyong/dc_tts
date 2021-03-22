@@ -56,7 +56,7 @@ In order to clone your voice you need around 200 samples of your voice, each one
 1. First, you need to download the [pretrained model] if you want to make an english voice. Otherwise, find an online text-to-speech dataset of the desired language and train the model from scratch. For example, I made an italian version of my voice, starting from [this] dataset. 
 [Here] you can download the italian pre-trained model I generated. 
 Make sure to put the pretrained model inside the 'logdir' directory.
-2. Inside LJSpeech-1.1 you have to edit the transcript.csv file to match your audio samples. Each line must have this format: <audioFileName|original sentence|normalized sentence>, where the audio name is without the extension and the normalized sentence contains the conversion from numbers to words. Take a look at the original transcript.csv and you'll understand it easily. Then, copy your audio samples inside the wavs folder. If you want to make the data generation process less painful, I suggest writing the transcript file first, then record the sentences using record.py.
+2. Inside LJSpeech-1.1 you have to edit the transcript.csv file to match your audio samples. Each line must have this format: <audioFileName|original sentence|normalized sentence>, where the audio name is without the extension and the normalized sentence contains the conversion from numbers to words. Take a look at the original transcript.csv and you'll understand it easily. Then, copy your audio samples inside the wavs folder.
 
 [pretrained model]: https://www.dropbox.com/s/1oyipstjxh2n5wo/LJ_logdir.tar?dl=0
 [this]: https://www.caito.de/2019/01/the-m-ailabs-speech-dataset/
