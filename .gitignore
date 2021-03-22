@@ -1,5 +1,3 @@
-/logdir
-
 *.iml
 /Android_App/.gradle
 /Android_App/local.properties
