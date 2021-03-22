@@ -40,7 +40,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-This is the most important part. If you want this to work, make sure you have the following things installed. Since the model uses and old version of python and tensorflow, I suggest creating a virtual environment and install everything there.
+This is the most important part. If you want this to work, make sure you have the following things installed. Since the model uses an old version of python and tensorflow, I suggest creating a virtual environment and install everything there.
 
 * []() Python 3.6
 * []() Tensorflow 1.15.0
@@ -61,18 +61,18 @@ Make sure to put the pretrained model inside the 'logdir' directory.
 
 [pretrained model]: https://www.dropbox.com/s/1oyipstjxh2n5wo/LJ_logdir.tar?dl=0
 [this]: https://www.caito.de/2019/01/the-m-ailabs-speech-dataset/
-[here]:
+[here]: https://www.dropbox.com/s/y38m6hrucah3ua7/logdir.rar?dl=0
 
 ## Training
 
-If you want to understand how the model works, you should read [this]. Otherwise, treat it as a black box and mechanically follow my steps.
+If you want to understand how the model works, you should read [this paper]. Otherwise, treat it as a black box and mechanically follow my steps.
 
 1. Edit hyperparams.py and make sure that prepro is set to True. Also, edit the data path to match the correct location inside your local pc.
 2. Run prepo.py
 3. Run 'python train.py 1'. This is going to take a different amount of steps for each voice, but usually after 10k steps the result should already be decent.
 4. Run 'python train.py 2'. You have to train it at least 2k steps, otherwise the voice will not sound human.
 
-[this]: https://arxiv.org/abs/1710.08969
+[this paper]: https://arxiv.org/abs/1710.08969
 
 ## Testing
 
@@ -83,54 +83,12 @@ Open harvard_sentences.txt and edit the lines as you desire. Then, run 'python s
 As you can see, it's not very comfortable to generate the sentences. That's why I decided to make this process more user-friendly.
 The android app is basically just a wrapper that let you generate the audios, save them locally on the phone and share them.
 When you write something and press the play button in the app, the message is sent to the server.py, that launches synthesize.py and then sends the audio back to the android application.
-If you want to use the application outside your local network, make sure to set up the port forwarding, opening the access to the port written in the server.py. The default port is '1234'. You can change it if you want, but remember to change also the port in the MainActivity.java
+If you want to use the application outside your local network, make sure to set up the port forwarding, opening the access to the port written in the server.py. The default port is '1234'. You can change it if you want, but remember to change also the port in the MainActivity.java.
+By default the model only computes sentences shorter than 10 seconds, but in the server.py I worked around this problem by splitting the input message into small sentences, then running the synthesize on every sentence and merging the resulting audios.
 
 ## Usage
 
 Run 'python server.py' on your local pc. Then leave it on for as long as you need.
 
-I have to add images and/or gifs now
-
-
-
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-
-
-<!-- CONTACT -->
-## Contact
-
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email
-
-Project Link: [https://github.com/github_username/repo_name](https://github.com/github_username/repo_name)
-
-
-
-<!-- ACKNOWLEDGEMENTS -->
-## Acknowledgements
-
-* []()
-* []()
-* []()
-
-
-
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/github_username/repo.svg?style=for-the-badge
-[contributors-url]: https://github.com/github_username/repo/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/github_username/repo.svg?style=for-the-badge
-[forks-url]: https://github.com/github_username/repo/network/members
-[stars-shield]: https://img.shields.io/github/stars/github_username/repo.svg?style=for-the-badge
-[stars-url]: https://github.com/github_username/repo/stargazers
-[issues-shield]: https://img.shields.io/github/issues/github_username/repo.svg?style=for-the-badge
-[issues-url]: https://github.com/github_username/repo/issues
-[license-shield]: https://img.shields.io/github/license/github_username/repo.svg?style=for-the-badge
-[license-url]: https://github.com/github_username/repo/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/github_username
+## Notes
+In case something is not clear or you bump into some weird error, don't be afraid to ask.
