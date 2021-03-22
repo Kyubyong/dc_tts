@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="4dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="4dp">
+
+        <ImageView
+            android:id="@+id/button1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="2dp"
+            app:srcCompat="@drawable/ic_baseline_play_circle_24" />
+
+        <TextView
+            android:id="@+id/fileName1"
+            android:layout_width="265dp"
+            android:layout_height="27dp"
+            android:layout_alignBottom="@+id/button1"
+            android:layout_alignParentTop="true"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="11dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_toEndOf="@+id/button1"
+            android:layout_toRightOf="@+id/button1"
+            android:text="line 1"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <ImageView
+            android:id="@+id/share_button"
+            android:layout_width="40dp"
+            android:layout_height="50dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:padding="2dp"
+
+            app:srcCompat="@drawable/ic_baseline_share_24" />
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>
