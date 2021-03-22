@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             Socket s = null;
             try {
                 s = new Socket();
-                s.connect(new InetSocketAddress("188.152.15.134", 1234), 3000);
+                s.connect(new InetSocketAddress("youripaddress", 1234), 3000);
             }
             catch (IOException e) {
                 runOnUiThread(new Runnable() {
