@@ -93,3 +93,4 @@ By default the model only computes sentences shorter than 10 seconds, but in the
 ## Notes
 * []() In case something is not clear or you bump into some weird error, don't be afraid to ask.
 * []() This is my first android project, I had no prior experience on mobile development. So the code is probably not optimal, but it works.
+* []() The application runs both an Italian and English model because I have cloned my voice in both languages. I think the code still works with one model without any tweaks though.
