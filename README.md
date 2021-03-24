@@ -1,5 +1,7 @@
 # A guide to clone anyone's voice and use it as a text-to-speech with android 
 
+[Click here] for the video demonstration!
+
 <img align="right" src="https://github.com/simsax/Voice_cloner/blob/myChanges/demo.gif" width="216" height="384" />
 
 <details open="open">
@@ -31,6 +33,7 @@
 This is a fun little project I made out of boredom. After seeing [Kyubyong's] text-to-speech model, I decided to create an android application that can read what I write with my own voice. If you copy the code and follow my steps, you'll be able to do the same.
 
 [Kyubyong's]: https://github.com/Kyubyong/dc_tts
+[Click here]: https://www.youtube.com/watch?v=NrzY_js8yZ4
 <!-- GETTING STARTED -->
 ## Getting Started
 
