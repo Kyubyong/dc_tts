@@ -22,14 +22,13 @@ def sendToClient(msg):
 
         with open('harvard_sentences.txt','w') as f:
             first = True
-            i = 1
-            for sentence in sentences:
+            for i, sentence in enumerate(sentences, start=1):
                 if first:
                     f.write("first line\n1. "+str(sentence)+"\n")
                     first = False
                 else:
                     f.write(f"{i}. {str(sentence)}\n")
-                i += 1
+                    
         num_sentences = len(sentences)
     else:
         with open('harvard_sentences.txt','w') as f:
