@@ -34,12 +34,7 @@ def sendToClient(msg):
         with open('harvard_sentences.txt','w') as f:
             f.write("first line\n1. "+str(msg)+"\n")
         num_sentences = 1
-
-    if (lang == 'ITA'):
-        os.system('python synthesize.py ITA')
-    else:
-        os.system('python synthesize.py ENG')
-
+    os.system('python synthesize.py '+lang)
     sounds = 0
     for i in range(0, num_sentences):
         sounds += AudioSegment.from_wav(f"samples/{i+1}.wav")
