@@ -16,8 +16,7 @@ from networks import TextEnc, AudioEnc, AudioDec, Attention, SSRN
 import tensorflow as tf
 from utils import *
 import sys
-
-
+import os
 class Graph:
     def __init__(self, num=1, mode="train"):
         '''
@@ -140,7 +139,12 @@ if __name__ == '__main__':
 
     g = Graph(num=num); print("Training Graph loaded")
 
-    logdir = hp.logdir + "-" + str(num)
+    logdir = hp.logdir + "-" + str(num) + hp.lang
+    try:
+        os.mkdir(logdir)
+        print(f"Created Folder for {hp.lang}")
+    except OSError as error:
+        print(error)
     sv = tf.train.Supervisor(logdir=logdir, save_model_secs=0, global_step=g.global_step)
     with sv.managed_session() as sess:
         for i in range(0,hp.num_iterations):
