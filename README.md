@@ -1,6 +1,6 @@
 # A guide to clone anyone's voice and use it as a text-to-speech with android 
 
-[Click here] for the video demonstration!
+<!--[Click here] for the video demonstration!-->
 
 <img align="right" src="https://github.com/simsax/Voice_cloner/blob/myChanges/demo.gif" width="216" height="384" />
 
