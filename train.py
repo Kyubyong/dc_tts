@@ -16,8 +16,7 @@ from networks import TextEnc, AudioEnc, AudioDec, Attention, SSRN
 import tensorflow as tf
 from utils import *
 import sys
-
-
+import os
 class Graph:
     def __init__(self, num=1, mode="train"):
         '''
@@ -140,23 +139,27 @@ if __name__ == '__main__':
 
     g = Graph(num=num); print("Training Graph loaded")
 
-    logdir = hp.logdir + "-" + str(num)
+    logdir = hp.logdir + "-" + str(num) + hp.lang
+    try:
+        os.mkdir(logdir)
+        print(f"Created Folder for {hp.lang}")
+    except OSError as error:
+        print(error)
     sv = tf.train.Supervisor(logdir=logdir, save_model_secs=0, global_step=g.global_step)
     with sv.managed_session() as sess:
-        while 1:
+        for i in range(0,hp.num_iterations):
+            print(f"Step {i+1}")
             for _ in tqdm(range(g.num_batch), total=g.num_batch, ncols=70, leave=False, unit='b'):
                 gs, _ = sess.run([g.global_step, g.train_op])
 
                 # Write checkpoint files at every 1k steps
                 if gs % 1000 == 0:
+                    print("Reached 1k")
                     sv.saver.save(sess, logdir + '/model_gs_{}'.format(str(gs // 1000).zfill(3) + "k"))
 
                     if num==1:
                         # plot alignment
                         alignments = sess.run(g.alignments)
                         plot_alignment(alignments[0], str(gs // 1000).zfill(3) + "k", logdir)
-
-                # break
-                if gs > hp.num_iterations: break
 
     print("Done")

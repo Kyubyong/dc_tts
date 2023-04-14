@@ -1,68 +1,99 @@
-# A TensorFlow Implementation of DC-TTS: yet another text-to-speech model
+# A guide to clone anyone's voice and use it as a text-to-speech with android 
 
-I implement yet another text-to-speech model, dc-tts, introduced in [Efficiently Trainable Text-to-Speech System Based on Deep Convolutional Networks with Guided Attention](https://arxiv.org/abs/1710.08969). My goal, however, is not just replicating the paper. Rather, I'd like to gain insights about various sound projects.
+<!--[Click here] for the video demonstration!-->
 
-## Requirements
-  * NumPy >= 1.11.1
-  * TensorFlow >= 1.3 (Note that the API of `tf.contrib.layers.layer_norm` has changed since 1.3)
-  * librosa
-  * tqdm
-  * matplotlib
-  * scipy
+<img align="right" src="https://github.com/simsax/Voice_cloner/blob/myChanges/demo.gif" width="216" height="384" />
 
-## Data
+<details open="open">
+  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
+  <ol>
+    <li>
+      <a href="#introduction">Introduction</a>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#data-preparation">Data preparation</a></li>
+      </ul>
+    </li>
+    <li><a href="#training">Training</a></li>
+    <li><a href="#testing">Testing</a></li>
+    <li><a href="#creating-the-android-app">Creating the android app</a></li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#notes">Notes</a></li>
+  </ol>
+</details>
 
-<img src="https://image.shutterstock.com/z/stock-vector-korean-alphabet-korean-hangul-pattern-693680611.jpg" height="200" align="right">
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Kate_Winslet_March_18%2C_2014_%28headshot%29.jpg/890px-Kate_Winslet_March_18%2C_2014_%28headshot%29.jpg" height="200" align="right">
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nick_Offerman_at_UMBC_%28cropped%29.jpg/440px-Nick_Offerman_at_UMBC_%28cropped%29.jpg" height="200" align="right">
-<img src="https://image.shutterstock.com/z/stock-vector-lj-letters-four-colors-in-abstract-background-logo-design-identity-in-circle-alphabet-letter-418687846.jpg" height="200" align="right">
+<br />
 
-I train English models and an Korean model on four different speech datasets. <p> 1. [LJ Speech Dataset](https://keithito.com/LJ-Speech-Dataset/) <br/> 2. [Nick Offerman's Audiobooks](https://www.audible.com.au/search?searchNarrator=Nick+Offerman) <br/> 3. [Kate Winslet's Audiobook](https://www.audible.com.au/pd/Classics/Therese-Raquin-Audiobook/B00FF0SLW4/ref=a_search_c4_1_3_srTtl?qid=1516854754&sr=1-3) <br/> 4. [KSS Dataset](https://kaggle.com/bryanpark/korean-single-speaker-speech-dataset)
+---
 
-LJ Speech Dataset is recently widely used as a benchmark dataset in the TTS task because it is publicly available, and it has 24 hours of reasonable quality samples.
-Nick's and Kate's audiobooks are additionally used to see if the model can learn even with less data, variable speech samples. They are 18 hours and 5 hours long, respectively. Finally, KSS Dataset is a Korean single speaker speech dataset that lasts more than 12 hours.
+## Introduction
+This is a fun little project I made out of boredom. After seeing [Kyubyong's] text-to-speech model, I decided to create an android application that can read what I write with my own voice. If you copy the code and follow my steps, you'll be able to do the same.
 
+[Kyubyong's]: https://github.com/Kyubyong/dc_tts
+[Click here]: https://www.youtube.com/watch?v=NrzY_js8yZ4
+<!-- GETTING STARTED -->
+## Getting Started
+
+To get a local copy up and running follow these simple steps.
+
+### Prerequisites
+
+This is the most important part. If you want this to work, make sure you have the following things installed. Since the model uses an old version of python and tensorflow, I suggest creating a virtual environment and install everything there.
+
+* []() Python 3.6
+* []() Tensorflow 1.15.0
+* []() librosa
+* []() tqdm
+* []() matplotlib
+* []() scipy
+* []() Android Studio
+* []() An android phone (?)
+* []() Some time to lose
+
+### Data preparation
+
+In order to clone your voice you need around 200 samples of your voice, each one between 2-10 seconds. This means that you can clone anyone's voice with only 15-20 minutes of audio, thanks to transfer learning.
+1. First, you need to download the [pretrained model] if you want to make an english voice. Otherwise, find an online text-to-speech dataset of the desired language and train the model from scratch. For example, I made an italian version of my voice, starting from [this] dataset. 
+[Here] you can download the italian pre-trained model I generated. 
+Make sure to put the pretrained model inside the 'logdir' directory.
+2. Inside LJSpeech-1.1 you have to edit the transcript.csv file to match your audio samples. Each line must have this format: <audioFileName|original sentence|normalized sentence>, where the audio name is without the extension and the normalized sentence contains the conversion from numbers to words. Take a look at the original transcript.csv and you'll understand it easily. Then, copy your audio samples inside the wavs folder. If you want to make the data generation process less painful, I suggest writing the transcript file first, then record the sentences using record.py.
+
+[pretrained model]: https://www.dropbox.com/s/1oyipstjxh2n5wo/LJ_logdir.tar?dl=0
+[this]: https://www.caito.de/2019/01/the-m-ailabs-speech-dataset/
+[here]: https://www.dropbox.com/s/36t6l3c1192mgw4/logdir.rar?dl=0
 
 ## Training
-  * STEP 0. Download [LJ Speech Dataset](https://keithito.com/LJ-Speech-Dataset/) or prepare your own data.
-  * STEP 1. Adjust hyper parameters in `hyperparams.py`. (If you want to do preprocessing, set prepro True`.
-  * STEP 2. Run `python train.py 1` for training Text2Mel. (If you set prepro True, run python prepro.py first)
-  * STEP 3. Run `python train.py 2` for training SSRN.
 
-You can do STEP 2 and 3 at the same time, if you have more than one gpu card.
+If you want to understand how the model works, you should read [this paper]. Otherwise, treat it as a black box and mechanically follow my steps.
 
-## Training Curves
+1. Edit hyperparams.py and make sure that prepro is set to True. Also, edit the data path to match the correct location inside your local pc. Set the batch size to 16 or 32 depending on your ram. You can also tune max_N and max_T.
+2. Run prepo.py only one time. After this step you should see two new folders, 'megs' and 'mals'. If you change dataset, then delete megs and mals and run the prepo.py again.
+3. Run 'python train.py 1'. This is going to take a different amount of steps for each voice, but usually after 10k steps the result should already be decent.
+4. Run 'python train.py 2'. You have to train it at least 2k steps, otherwise the voice will not sound human.
 
-<img src="fig/training_curves.png">
+[this paper]: https://arxiv.org/abs/1710.08969
 
-## Attention Plot
-<img src="fig/attention.gif">
+## Testing
 
-## Sample Synthesis
-I generate speech samples based on [Harvard Sentences](http://www.cs.columbia.edu/~hgs/audio/harvard.html) as the original paper does. It is already included in the repo.
+Open harvard_sentences.txt and edit the lines as you desire. Then, run 'python synthesize.py'. If everything is correct, a 'samples' directory should appear. 
 
-  * Run `synthesize.py` and check the files in `samples`.
+## Creating the android app
 
-## Generated Samples
+As you can see, it's not very comfortable to generate the sentences. That's why I decided to make this process more user-friendly.
+The android app is basically just a wrapper that let you generate the audios, save them locally on the phone and share them.
+When you write something and press the play button in the app, the message is sent to the server.py, that launches synthesize.py and then sends the audio back to the android application.
+If you want to use the application outside your local network, make sure to set up the port forwarding, opening the access to the port written in the server.py. The default port is '1234'. You can change it if you want, but remember to change also the port in the MainActivity.java. You also have to set your ip address in the same file.
+By default the model only computes sentences shorter than 10 seconds, but in the server.py I worked around this problem by splitting the input message into small sentences, then running the synthesize on every sentence and merging the resulting audios.
 
-| Dataset       | Samples |
-| :----- |:-------------|
-| LJ      | [50k](https://soundcloud.com/kyubyong-park/sets/dc_tts) [200k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_200k) [310k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_310k) [800k](https://soundcloud.com/kyubyong-park/sets/dc_tts_lj_800k)|
-| Nick      | [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_40k) [170k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_170k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_300k) [800k](https://soundcloud.com/kyubyong-park/sets/dc_tts_nick_800k)|
-| Kate| [40k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_40k) [160k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_160k) [300k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_300k) [800k](https://soundcloud.com/kyubyong-park/sets/dc_tts_kate_800k) |
-| KSS| [400k](https://soundcloud.com/kyubyong-park/sets/dc_tts_ko_400k) |
+## Usage
 
-## Pretrained Model for LJ
-
-Download [this](https://www.dropbox.com/s/1oyipstjxh2n5wo/LJ_logdir.tar?dl=0).
+1. Import the Android_App folder into Android Studio and edit the ip address to match your ip in MainActivity.java.
+2. Run 'python server.py' on your local pc, then leave it on for as long as you need.
 
 ## Notes
-
-  * The paper didn't mention normalization, but without normalization I couldn't get it to work. So I added layer normalization.
-  * The paper fixed the learning rate to 0.001, but it didn't work for me. So I decayed it.
-  * I tried to train Text2Mel and SSRN simultaneously, but it didn't work. I guess separating those two networks mitigates the burden of training.
-  * The authors claimed that the model can be trained within a day, but unfortunately the luck was not mine. However obviously this is much fater than Tacotron as it uses only convolution layers.
-  * Thanks to the guided attention, the attention plot looks monotonic almost from the beginning. I guess this seems to hold the aligment tight so it won't lose track.
-  * The paper didn't mention dropouts. I applied them as I believe it helps for regularization.
-  * Check also other TTS models such as [Tacotron](https://github.com/kyubyong/tacotron) and [Deep Voice 3](https://github.com/kyubyong/deepvoice3).
-  
+* []() In case something is not clear or you bump into some weird error, don't be afraid to ask.
+* []() This is my first android project, I had no prior experience on mobile development. So the code is probably not optimal, but it works.
+* []() The application runs both an Italian and English model because I have cloned my voice in both languages. I think the code still works with one model without any tweaks though.

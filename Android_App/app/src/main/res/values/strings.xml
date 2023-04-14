@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Simsax voice</string>
+    <string name="write_something">Write something...</string>
+    <string name="scrivi_qualcosa">Scrivi qualcosa...</string>
+    <string name="play_button">play button</string>
+    <string name="fuck_off">fuck off</string>
+    <string name="recordings">Recordings</string>
+    <string name="settings">Settings</string>
+    <string name="exit">Exit</string>
+    <string name="openNavDrawer">Navigation drawer open</string>
+    <string name="closeNavDrawer">Navigation drawer close</string>
+    <string name="title_activity_recordings">RecordingsActivity</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="textview">TextView</string>
+    <string name="send_to">Send to...</string>
+    <string name="ita_button">ita button</string>
+    <string name="eng_button">eng button</string>
+</resources>

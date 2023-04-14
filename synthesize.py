@@ -8,7 +8,7 @@ https://www.github.com/kyubyong/dc_tts
 from __future__ import print_function
 
 import os
-
+import sys
 from hyperparams import Hyperparams as hp
 import numpy as np
 import tensorflow as tf
@@ -18,7 +18,7 @@ from data_load import load_data
 from scipy.io.wavfile import write
 from tqdm import tqdm
 
-def synthesize():
+def synthesize(lang):
     # Load data
     L = load_data("synthesize")
 
@@ -31,13 +31,13 @@ def synthesize():
         # Restore parameters
         var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Text2Mel')
         saver1 = tf.train.Saver(var_list=var_list)
-        saver1.restore(sess, tf.train.latest_checkpoint(hp.logdir + "-1"))
+        saver1.restore(sess, tf.train.latest_checkpoint(hp.logdir + f"-1{lang}"))
         print("Text2Mel Restored!")
 
         var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SSRN') + \
                    tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'gs')
         saver2 = tf.train.Saver(var_list=var_list)
-        saver2.restore(sess, tf.train.latest_checkpoint(hp.logdir + "-2"))
+        saver2.restore(sess, tf.train.latest_checkpoint(hp.logdir + f"-2{lang}"))
         print("SSRN Restored!")
 
         # Feed Forward
@@ -64,7 +64,8 @@ def synthesize():
             write(hp.sampledir + "/{}.wav".format(i+1), hp.sr, wav)
 
 if __name__ == '__main__':
-    synthesize()
+    lang = sys.argv[1] # ITA or ENG
+    synthesize(lang)
     print("Done")
 
 
